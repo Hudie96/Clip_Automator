@@ -124,6 +124,19 @@
             height: 100%;
         }
 
+        /* Tab bar should always be visible at top of left panel */
+        .tab-bar {
+            flex-shrink: 0;
+            order: -1; /* Move to top */
+        }
+
+        /* Content panels container */
+        .panel-container {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
         .right-panel {
             display: flex;
             flex-direction: column;
@@ -542,6 +555,12 @@
 
         .review-panel {
             padding: 20px;
+            display: none;
+            overflow-y: auto;
+        }
+
+        .review-panel.active {
+            display: block;
         }
 
         .review-header {
@@ -1545,13 +1564,21 @@
         .dashboard-view {
             display: flex;
             flex-direction: column;
-            height: 100%;
+            flex: 1;
             min-height: 0;
             overflow: hidden;
         }
 
         .dashboard-view.hidden {
             display: none;
+        }
+
+        /* All panels should fill the container */
+        .vods-panel,
+        .streamers-panel,
+        .review-panel {
+            flex: 1;
+            min-height: 0;
         }
 
         .clips-filter-bar {
@@ -2797,8 +2824,19 @@
     <div class="main-container">
         <!-- Left Panel: Stream + Stats -->
         <div class="left-panel">
-            <!-- Dashboard View -->
-            <div class="dashboard-view" id="dashboardView">
+            <!-- Tab Bar (always visible at top) -->
+            <div class="tab-bar">
+                <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+                <button class="tab-btn" onclick="switchTab('clips')">All Clips</button>
+                <button class="tab-btn" onclick="switchTab('vods')">VODs</button>
+                <button class="tab-btn" onclick="switchTab('streamers')">Streamers</button>
+                <button class="tab-btn" onclick="switchTab('review')">Review <span id="pendingCount" class="pending-badge" style="display:none;">0</span></button>
+            </div>
+
+            <!-- Panel Container (scrollable content area) -->
+            <div class="panel-container">
+                <!-- Dashboard View -->
+                <div class="dashboard-view" id="dashboardView">
                 <!-- Top Section: Stream + Inline Stats side by side -->
                 <div class="top-section">
                     <!-- Stream Section -->
@@ -3004,15 +3042,6 @@
                 </div>
             </div>
 
-            <!-- Tab Bar -->
-            <div class="tab-bar">
-                <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
-                <button class="tab-btn" onclick="switchTab('clips')">All Clips</button>
-                <button class="tab-btn" onclick="switchTab('vods')">VODs</button>
-                <button class="tab-btn" onclick="switchTab('streamers')">Streamers</button>
-                <button class="tab-btn" onclick="switchTab('review')">Review <span id="pendingCount" class="pending-badge" style="display:none;">0</span></button>
-            </div>
-
             <!-- VODs Panel -->
             <div id="vodsView" class="vods-panel">
                 <div class="vod-selector">
@@ -3122,6 +3151,7 @@
                     <div class="loading-message">Loading clips for review...</div>
                 </div>
             </div>
+            </div> <!-- Close panel-container -->
         </div>
 
         <!-- Right Panel: Recent Clips Sidebar -->
@@ -3323,11 +3353,14 @@
         function switchTab(tab) {
             currentTab = tab;
 
-            // Update buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
+            // Update buttons - find the correct button by tab name
+            document.querySelectorAll('.tab-btn').forEach((btn, index) => {
                 btn.classList.remove('active');
+                const tabNames = ['dashboard', 'clips', 'vods', 'streamers', 'review'];
+                if (tabNames[index] === tab) {
+                    btn.classList.add('active');
+                }
             });
-            event.target.classList.add('active');
 
             // Show/hide views
             const dashboardView = document.getElementById('dashboardView');
@@ -3337,20 +3370,18 @@
             const vodsView = document.getElementById('vodsView');
 
             // Hide all views
-            dashboardView.classList.add('hidden');
-            clipsView.classList.remove('active');
-            if (reviewView) reviewView.style.display = 'none';
+            if (dashboardView) dashboardView.classList.add('hidden');
+            if (clipsView) clipsView.classList.remove('active');
+            if (reviewView) reviewView.classList.remove('active');
             if (streamersView) streamersView.classList.remove('active');
             if (vodsView) vodsView.classList.remove('active');
 
             if (tab === 'dashboard') {
-                dashboardView.classList.remove('hidden');
+                if (dashboardView) dashboardView.classList.remove('hidden');
             } else if (tab === 'clips') {
-                clipsView.classList.add('active');
+                if (clipsView) clipsView.classList.add('active');
             } else if (tab === 'vods') {
-                if (vodsView) {
-                    vodsView.classList.add('active');
-                }
+                if (vodsView) vodsView.classList.add('active');
             } else if (tab === 'streamers') {
                 if (streamersView) {
                     streamersView.classList.add('active');
@@ -3358,7 +3389,7 @@
                 }
             } else if (tab === 'review') {
                 if (reviewView) {
-                    reviewView.style.display = 'block';
+                    reviewView.classList.add('active');
                     loadPendingClips();
                 }
             }
