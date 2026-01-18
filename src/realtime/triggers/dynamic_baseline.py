@@ -38,6 +38,10 @@ class DynamicBaseline:
     # Default 5-minute window
     DEFAULT_WINDOW_SECONDS = 300
 
+    # Minimum spike buffer - velocity must exceed threshold by at least this much
+    # This prevents constant triggering when velocity barely exceeds threshold
+    MINIMUM_SPIKE_BUFFER = 2.0  # msg/sec above threshold required
+
     def __init__(
         self,
         channel_id: str,
@@ -108,16 +112,19 @@ class DynamicBaseline:
         """
         Detect if current velocity represents a spike.
 
-        A spike is detected when velocity exceeds the calculated threshold.
+        A spike is detected when velocity exceeds the calculated threshold
+        PLUS a minimum buffer to prevent constant triggering.
 
         Args:
             velocity: Current velocity to check.
 
         Returns:
-            True if velocity > threshold, False otherwise.
+            True if velocity > (threshold + buffer), False otherwise.
         """
         threshold = self.get_threshold()
-        return velocity > threshold
+        # Require velocity to exceed threshold by at least MINIMUM_SPIKE_BUFFER
+        # This prevents triggering when velocity is barely above threshold
+        return velocity > (threshold + self.MINIMUM_SPIKE_BUFFER)
 
     def get_stats(self) -> Dict[str, float]:
         """

@@ -17,6 +17,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.web.api import api_bp
 from src.web.live_stats import shared_stats
+from config.settings import (
+    CHAT_VELOCITY_THRESHOLD,
+    KEYWORD_THRESHOLD,
+    EMOTE_SPAM_THRESHOLD,
+    SPIKE_THRESHOLD,
+    CLIP_COOLDOWN,
+    CLIP_BEFORE,
+    CLIP_AFTER
+)
 
 # Get project root (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -166,10 +175,21 @@ def dashboard():
     streamers = get_streamers()
     stats = get_stats()
 
+    # Clipping criteria from settings
+    criteria = {
+        'chat_velocity': CHAT_VELOCITY_THRESHOLD,
+        'keyword_threshold': KEYWORD_THRESHOLD,
+        'emote_threshold': EMOTE_SPAM_THRESHOLD,
+        'viewer_spike': SPIKE_THRESHOLD,
+        'cooldown': CLIP_COOLDOWN,
+        'clip_length': CLIP_BEFORE + CLIP_AFTER
+    }
+
     return render_template('dashboard.html',
                          clips=clips,
                          streamers=streamers,
-                         stats=stats)
+                         stats=stats,
+                         criteria=criteria)
 
 
 @app.route('/clips')

@@ -51,9 +51,10 @@ from config.settings import (
     SEGMENTS_TO_KEEP,
     SEGMENTS_DIR,
     CLIP_COOLDOWN,
-    MAX_CLIPS_PER_DAY,
-    HIGH_PRIORITY_CONFIDENCE
+    HIGH_PRIORITY_CONFIDENCE,
+    TRIGGER_COOLDOWNS
 )
+from src.web.live_stats import shared_stats
 from src.db.schema import init_db, start_session, end_session, log_moment
 from src.realtime.triggers import ViewerTrigger, ChatTrigger, TriggerEvent
 from src.utils.cleanup import cleanup_old_segments
@@ -125,11 +126,13 @@ class SegmentRecorder:
             cmd = f'"{ffmpeg_path}" -i "{hls_url}" -c copy -f segment -segment_time {SEGMENT_DURATION} -segment_format mpegts -reset_timestamps 1 -y "{segment_pattern}"'
 
             print(f"[recorder] Running: ffmpeg -i [URL] -c copy -f segment ... {segment_pattern}")
+
+            # Start FFmpeg - don't capture stderr so we can see errors
             self.process = subprocess.Popen(
                 cmd,
                 shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=None,  # Let stderr go to console for debugging
                 cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # Project root
             )
             print(f"[recorder] FFmpeg started (PID: {self.process.pid})")
@@ -154,9 +157,6 @@ class SegmentRecorder:
             # Check if FFmpeg is still running
             if self.process and self.process.poll() is not None:
                 print(f"[recorder] FFmpeg exited with code {self.process.returncode}")
-                stderr = self.process.stderr.read().decode() if self.process.stderr else ""
-                if stderr:
-                    print(f"[recorder] FFmpeg error: {stderr[:500]}")
                 self.running = False
                 break
 
@@ -310,13 +310,9 @@ class RealtimeClipper:
         self.viewer_trigger: Optional[ViewerTrigger] = None
         self.chat_trigger: Optional[ChatTrigger] = None
 
-        # Track clip times to prevent duplicates
-        self.last_clip_time: Optional[datetime] = None
-        self.clip_cooldown = CLIP_COOLDOWN  # seconds between clips (from settings)
-
-        # Daily clip limit tracking
-        self.clips_today = 0
-        self.clip_date = datetime.now().date()
+        # Track clip times per trigger type for per-trigger cooldowns
+        self.last_trigger_times: Dict[str, datetime] = {}
+        self.default_cooldown = CLIP_COOLDOWN  # fallback if trigger not in TRIGGER_COOLDOWNS
 
     def _on_trigger(self, event: TriggerEvent):
         """Callback when any trigger fires.
@@ -331,36 +327,32 @@ class RealtimeClipper:
         print(f"  Data: {event.data}")
         print(f"{'='*60}\n")
 
-        # Reset daily counter at midnight
-        today = datetime.now().date()
-        if today != self.clip_date:
-            self.clip_date = today
-            self.clips_today = 0
-            print(f"[clip] New day - resetting clip counter")
-
-        # Check daily limit
-        if self.clips_today >= MAX_CLIPS_PER_DAY:
-            print(f"[clip] Daily limit reached ({MAX_CLIPS_PER_DAY} clips) - skipping")
-            return
+        # Add trigger to shared stats for dashboard display
+        shared_stats.add_trigger(self.streamer, event.trigger_type, event.data)
 
         # Check if this is a high-priority trigger that can bypass cooldown
+        # NOTE: Only combos and strong viewer spikes bypass cooldown
+        # Chat velocity does NOT bypass, even with high confidence (too spammy)
         is_high_priority = (
-            event.confidence >= HIGH_PRIORITY_CONFIDENCE or
             event.trigger_type in ["combo", "super_combo", "hype_moment"] or
             (event.trigger_type == "viewer_spike" and event.data.get("ratio", 0) >= 3.0)
         )
 
+        # Get per-trigger cooldown (or default)
+        trigger_cooldown = TRIGGER_COOLDOWNS.get(event.trigger_type, self.default_cooldown)
+        last_time = self.last_trigger_times.get(event.trigger_type)
+
         # Check cooldown for CLIP CREATION (bypassed for high-priority)
-        if self.last_clip_time and not is_high_priority:
-            elapsed = (datetime.now() - self.last_clip_time).total_seconds()
-            if elapsed < self.clip_cooldown:
-                print(f"[clip] Skipping clip creation (cooldown: {self.clip_cooldown - elapsed:.0f}s remaining)")
+        if last_time and not is_high_priority:
+            elapsed = (datetime.now() - last_time).total_seconds()
+            if elapsed < trigger_cooldown:
+                print(f"[clip] Skipping {event.trigger_type} (cooldown: {trigger_cooldown - elapsed:.0f}s remaining)")
                 return
 
-        if is_high_priority and self.last_clip_time:
-            elapsed = (datetime.now() - self.last_clip_time).total_seconds()
-            if elapsed < self.clip_cooldown:
-                print(f"[clip] HIGH PRIORITY trigger - bypassing cooldown!")
+        if is_high_priority and last_time:
+            elapsed = (datetime.now() - last_time).total_seconds()
+            if elapsed < trigger_cooldown:
+                print(f"[clip] HIGH PRIORITY {event.trigger_type} - bypassing cooldown!")
 
         # Get recent segments
         clip_duration = CLIP_BEFORE + CLIP_AFTER
@@ -374,9 +366,12 @@ class RealtimeClipper:
         clip_path = self.clip_creator.create_clip(segments, event, self.streamer)
 
         if clip_path:
-            self.last_clip_time = datetime.now()
-            self.clips_today += 1
-            print(f"[clip] Clips today: {self.clips_today}/{MAX_CLIPS_PER_DAY}")
+            # Record per-trigger cooldown
+            self.last_trigger_times[event.trigger_type] = datetime.now()
+            # Update shared stats for dashboard
+            shared_stats.increment_clips_today(self.streamer)
+            clips_today = shared_stats.get_clips_today(self.streamer)
+            print(f"[clip] Clips today: {clips_today}")
 
             # Log to database
             if self.session_id:
@@ -422,7 +417,7 @@ class RealtimeClipper:
         # Start chat trigger if we have chatroom ID
         if chatroom_id:
             print(f"[main] Starting chat monitor (chatroom {chatroom_id})")
-            self.chat_trigger = ChatTrigger(chatroom_id, callback=self._on_trigger)
+            self.chat_trigger = ChatTrigger(chatroom_id, callback=self._on_trigger, streamer=self.streamer)
             self.chat_trigger.start_threaded()
         else:
             print("[main] Could not get chatroom ID - chat monitoring disabled")

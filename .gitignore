@@ -40,3 +40,5 @@ Thumbs.db
 
 # Tools (large binaries)
 tools/ffmpeg*/
+nul
+tools/

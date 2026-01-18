@@ -17,9 +17,20 @@ COOLDOWN_AFTER_SPIKE = 30    # Seconds to wait before detecting another spike
 CLIP_BEFORE = 20             # Seconds to include before the spike (was 30)
 CLIP_AFTER = 25              # Seconds to include after the spike (was 30)
 CLIP_FORMAT = "mp4"          # Output format
-CLIP_COOLDOWN = 60           # Seconds between clip creation (prevents spam)
+CLIP_COOLDOWN = 60           # Default seconds between clip creation (prevents spam)
 MAX_CLIPS_PER_DAY = 50       # Maximum clips per streamer per day
-HIGH_PRIORITY_CONFIDENCE = 0.9  # Confidence threshold to bypass cooldown
+HIGH_PRIORITY_CONFIDENCE = 0.9  # Confidence threshold (used for scoring, not bypass)
+
+# Per-trigger cooldowns (seconds) - more spammy triggers get longer cooldowns
+TRIGGER_COOLDOWNS = {
+    "chat_velocity": 120,    # 2 minutes - most common trigger
+    "keyword": 90,           # 1.5 minutes
+    "emote_flood": 90,       # 1.5 minutes
+    "viewer_spike": 60,      # 1 minute - more rare and valuable
+    "combo": 30,             # 30 seconds - highest quality signal
+    "super_combo": 30,
+    "hype_moment": 30,
+}
 
 # ===================
 # Paths

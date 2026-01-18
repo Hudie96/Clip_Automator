@@ -335,6 +335,81 @@
             font-size: 0.9em;
         }
 
+        /* ===== CLIPPING CRITERIA ===== */
+        .criteria-section {
+            background: var(--bg-elevated);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .criteria-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .criteria-header h3 {
+            font-size: 0.9em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+        }
+
+        .criteria-item {
+            background: var(--bg-elevated);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .criteria-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--accent-secondary);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .criteria-label {
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .criteria-footer {
+            padding: 10px 16px;
+            border-top: 1px solid var(--border);
+            font-size: 0.8em;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .criteria-footer span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        @media (max-width: 900px) {
+            .criteria-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         /* ===== CLIPS SIDEBAR ===== */
         .clips-sidebar-header {
             padding: 14px 16px;
@@ -965,8 +1040,37 @@
                             <div class="stat-label">Chat/min</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value" id="statTriggersToday">{{ stats.total_clips }}</div>
+                            <div class="stat-value" id="statClipsToday">0</div>
                             <div class="stat-label">Clips Today</div>
+                        </div>
+                    </div>
+
+                    <!-- Clipping Criteria -->
+                    <div class="criteria-section">
+                        <div class="criteria-header">
+                            <h3>Clipping Criteria</h3>
+                        </div>
+                        <div class="criteria-grid">
+                            <div class="criteria-item">
+                                <div class="criteria-value">{{ criteria.chat_velocity }}</div>
+                                <div class="criteria-label">Chat msg/sec</div>
+                            </div>
+                            <div class="criteria-item">
+                                <div class="criteria-value">{{ criteria.keyword_threshold }}</div>
+                                <div class="criteria-label">Keyword mentions</div>
+                            </div>
+                            <div class="criteria-item">
+                                <div class="criteria-value">{{ criteria.emote_threshold }}</div>
+                                <div class="criteria-label">Emote flood</div>
+                            </div>
+                            <div class="criteria-item">
+                                <div class="criteria-value">{{ criteria.viewer_spike }}x</div>
+                                <div class="criteria-label">Viewer spike</div>
+                            </div>
+                        </div>
+                        <div class="criteria-footer">
+                            <span>Cooldown: {{ criteria.cooldown }}s</span>
+                            <span>Clip length: {{ criteria.clip_length }}s</span>
                         </div>
                     </div>
 
@@ -1319,9 +1423,16 @@
 
             if (currentStreamer && stats[currentStreamer]) {
                 const s = stats[currentStreamer];
-                document.getElementById('statViewers').textContent = s.viewers || 0;
+                document.getElementById('statViewers').textContent = formatNumber(s.viewers || 0);
                 document.getElementById('statChatVelocity').textContent = Math.round(s.chat_velocity || 0);
+                document.getElementById('statClipsToday').textContent = s.clips_today || 0;
             }
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
         }
 
         function updateTriggersList(data) {

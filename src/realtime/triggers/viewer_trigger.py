@@ -19,6 +19,7 @@ from config.settings import (
     KICK_API_BASE
 )
 from .base import BaseTrigger, TriggerEvent
+from src.web.live_stats import shared_stats
 
 
 class ViewerTrigger(BaseTrigger):
@@ -92,6 +93,7 @@ class ViewerTrigger(BaseTrigger):
             if not is_live:
                 if self.is_live:
                     print(f"[viewer] Stream went offline")
+                    shared_stats.update_recording_status(self.streamer, False)
                 self.is_live = False
                 self.viewer_history.clear()
                 time.sleep(POLL_INTERVAL)
@@ -105,6 +107,10 @@ class ViewerTrigger(BaseTrigger):
             viewers = livestream.get('viewer_count', 0)
             self.viewer_history.append(viewers)
             baseline = self.calculate_baseline()
+
+            # Update shared stats for dashboard
+            shared_stats.update_viewers(self.streamer, viewers)
+            shared_stats.update_recording_status(self.streamer, True)
 
             # Check for spike
             if baseline > 0:

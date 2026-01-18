@@ -35,6 +35,7 @@ from .base import BaseTrigger, TriggerEvent
 from .dynamic_baseline import DynamicBaseline
 from .excitement_detector import ExcitementDetector
 from .combo_trigger import ComboTrigger
+from src.web.live_stats import shared_stats
 
 # Try to import websocket
 try:
@@ -51,9 +52,10 @@ class ChatTrigger(BaseTrigger):
     Fires on chat velocity spikes, keyword spam, or emote spam.
     """
 
-    def __init__(self, chatroom_id: int, callback: Callable = None):
+    def __init__(self, chatroom_id: int, callback: Callable = None, streamer: str = None):
         super().__init__(name="chat", callback=callback)
         self.chatroom_id = chatroom_id
+        self.streamer = streamer  # For updating shared stats
         self.ws: Optional[websocket.WebSocketApp] = None
 
         # Message tracking
@@ -145,6 +147,10 @@ class ChatTrigger(BaseTrigger):
 
         # Calculate velocity
         velocity = len(self.message_times) / CHAT_WINDOW_SECONDS
+
+        # Update shared stats for dashboard (convert to messages per minute for display)
+        if self.streamer:
+            shared_stats.update_velocity(self.streamer, velocity * 60)
 
         # Update dynamic baseline and check for spike
         if self.dynamic_baseline:
