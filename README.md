@@ -127,14 +127,21 @@ Clipping automater/
 │   │   ├── dashboard.py         # Flask web server
 │   │   ├── api.py               # REST API endpoints
 │   │   ├── live_stats.py        # WebSocket live updates
+│   │   ├── streamer_search.py   # Kick API search for streamers
 │   │   └── templates/
-│   │       └── dashboard.html   # Gaming-style dark UI
+│   │       └── dashboard.html   # Gaming-style dark UI (responsive)
 │   │
 │   ├── db/
 │   │   └── schema.py            # SQLite schema + queries
 │   │
 │   ├── clip/
-│   │   └── create_clips.py      # FFmpeg clip extraction
+│   │   ├── create_clips.py      # FFmpeg clip extraction
+│   │   └── editor.py            # Trim/edit clips with in/out points
+│   │
+│   ├── vod/
+│   │   ├── __init__.py          # VOD module
+│   │   ├── vod_clipper.py       # VOD download and clipping
+│   │   └── chat_analyzer.py     # Chat replay analysis for highlights
 │   │
 │   ├── monitor/
 │   │   ├── chat_monitor.py      # Pusher WebSocket chat
@@ -245,6 +252,7 @@ Prevents clip spam with multiple layers:
 | `/api/clips/<filename>` | DELETE | Delete a clip |
 | `/api/clips/<filename>` | PATCH | Rename a clip |
 | `/api/clips/<filename>/favorite` | POST | Toggle favorite |
+| `/api/clips/<filename>/metadata` | GET | Get clip metadata (duration, etc.) |
 | `/api/favorites` | GET | List favorites |
 
 ### Clip Review
@@ -258,16 +266,96 @@ Prevents clip spam with multiple layers:
 | `/api/review/<id>` | DELETE | Delete immediately |
 | `/api/review/bulk` | POST | Bulk approve/reject |
 
+### Clip Editor
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/clips/trim` | POST | Trim a clip with in/out points |
+| `/api/clips/trim/status/<job_id>` | GET | Check trim job status |
+
+### Streamer Management
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/streamers/search` | GET | Search Kick for streamers (`?q=query`) |
+| `/api/streamers/add` | POST | Add streamer to monitoring list |
+| `/api/streamers/<name>` | DELETE | Remove streamer from monitoring |
+| `/api/streamers/list` | GET | List all monitored streamers |
+
+### VOD Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/vods/list/<streamer>` | GET | List VODs for a streamer |
+| `/api/vods/clip` | POST | Create clip from VOD |
+| `/api/vods/clip/status/<job_id>` | GET | Check VOD clip job status |
+| `/api/vods/analyze/<vod_id>` | POST | Analyze VOD chat for highlights |
+
 ---
 
 ## Dashboard Features
 
-- **Live Stream Preview** - Embedded Kick player
+- **Live Stream Preview** - Embedded Kick player (collapsible)
 - **Real-time Stats** - Viewers, chat velocity, triggers via WebSocket
 - **Clip Grid** - Thumbnails with hover-to-preview video
 - **Review Tab** - Approve/reject pending clips
+- **Fullscreen Slide Deck Review** - Review clips one-by-one with keyboard shortcuts
+- **Streamer Search Tab** - Search Kick for live streamers, add to monitoring
+- **VOD Clipper Tab** - Clip from past broadcasts (manual + auto-detect)
+- **Clip Editor** - Trim clips with in/out points, preview, and export
+- **Responsive Layout** - Dashboard fits on screen, no scrolling required
 - **Filtering** - By streamer, trigger type, favorites
 - **Dark Gaming UI** - Purple/cyan accent colors
+
+---
+
+## Keyboard Shortcuts
+
+### Review Slideshow
+
+| Key | Action |
+|-----|--------|
+| `←` `→` | Navigate between clips |
+| `Space` | Play/pause video |
+| `A` | Approve clip |
+| `R` | Reject clip |
+| `F` | Toggle favorite |
+| `D` | Delete clip |
+| `Esc` | Close slideshow |
+
+### Clip Editor
+
+| Key | Action |
+|-----|--------|
+| `I` | Set in-point (trim start) |
+| `O` | Set out-point (trim end) |
+| `P` | Preview trim |
+| `Space` | Play/pause |
+| `←` `→` | Seek 5 seconds |
+| `Esc` | Close editor |
+
+---
+
+## VOD Clipper
+
+Create clips from past broadcasts (VODs) on Kick.
+
+### Manual Clipping
+
+1. Go to the **VODs** tab in the dashboard
+2. Select a streamer and browse their past broadcasts
+3. Enter a timestamp and duration to create a clip
+
+### Auto-Detect (Chat Analysis)
+
+Uses chat replay data to find exciting moments in VODs:
+
+1. Click "Analyze VOD" on any past broadcast
+2. The system scans chat replay for spikes in activity
+3. Suggested clip moments appear with timestamps
+4. One-click to create clips from suggestions
+
+**Note:** Auto-detect uses credits (1 credit per VOD analyzed)
 
 ---
 

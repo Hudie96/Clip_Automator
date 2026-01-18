@@ -5,30 +5,35 @@ This document outlines the future architecture for scaling Clip Automater to a m
 ## Current Architecture (Local)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    LOCAL MACHINE                            │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────────┐    ┌─────────────────────────────┐    │
-│  │  Flask Dashboard│◄───│  Real-time Clipper          │    │
-│  │  (port 5000)    │    │  - FFmpeg segments          │    │
-│  │                 │    │  - Chat/Viewer triggers     │    │
-│  │  - Live stats   │    │  - Clip creation            │    │
-│  │  - Clip review  │    └─────────────────────────────┘    │
-│  │  - Video player │                                       │
-│  └────────┬────────┘                                       │
-│           │                                                 │
-│           ▼                                                 │
-│  ┌─────────────────┐    ┌─────────────────────────────┐    │
-│  │  SQLite         │    │  Local Storage              │    │
-│  │  (data/clips.db)│    │  - clips/                   │    │
-│  │                 │    │  - segments/                │    │
-│  │  - Sessions     │    │  - thumbnails               │    │
-│  │  - Moments      │    └─────────────────────────────┘    │
-│  │  - Clips        │                                       │
-│  └─────────────────┘                                       │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                              LOCAL MACHINE                                    │
+├───────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│  ┌─────────────────────────┐    ┌─────────────────────────────┐              │
+│  │  Flask Dashboard        │◄───│  Real-time Clipper          │              │
+│  │  (port 5000)            │    │  - FFmpeg segments          │              │
+│  │                         │    │  - Chat/Viewer triggers     │              │
+│  │  - Live stats           │    │  - Clip creation            │              │
+│  │  - Clip review          │    └─────────────────────────────┘              │
+│  │  - Fullscreen slideshow │                                                 │
+│  │  - Video player         │    ┌─────────────────────────────┐              │
+│  │  - Streamer search      │    │  VOD Clipper                │              │
+│  │  - VOD browser          │    │  - Download VOD segments    │              │
+│  │  - Clip editor          │    │  - Chat replay analysis     │              │
+│  └───────────┬─────────────┘    │  - Auto-detect highlights   │              │
+│              │                  └─────────────────────────────┘              │
+│              ▼                                                                │
+│  ┌─────────────────┐    ┌─────────────────────────────┐                      │
+│  │  SQLite         │    │  Local Storage              │                      │
+│  │  (data/clips.db)│    │  - clips/                   │                      │
+│  │                 │    │  - segments/                │                      │
+│  │  - Sessions     │    │  - thumbnails               │                      │
+│  │  - Moments      │    │  - vod_cache/               │                      │
+│  │  - Clips        │    └─────────────────────────────┘                      │
+│  │  - Streamers    │                                                         │
+│  └─────────────────┘                                                         │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Future Architecture (Multi-User SaaS)
@@ -69,7 +74,43 @@ This document outlines the future architecture for scaling Clip Automater to a m
 
 ## Key Components
 
-### API Layer
+### Current API Endpoints (Local)
+
+#### Clip Management
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/clips/<filename>` | DELETE | Delete a clip |
+| `/api/clips/<filename>` | PATCH | Rename a clip |
+| `/api/clips/<filename>/favorite` | POST | Toggle favorite |
+| `/api/clips/<filename>/metadata` | GET | Get clip metadata |
+| `/api/clips/trim` | POST | Trim clip with in/out points |
+| `/api/clips/trim/status/<job_id>` | GET | Check trim job status |
+
+#### Streamer Management
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/streamers/search` | GET | Search Kick for streamers |
+| `/api/streamers/add` | POST | Add streamer to monitoring |
+| `/api/streamers/<name>` | DELETE | Remove from monitoring |
+| `/api/streamers/list` | GET | List monitored streamers |
+
+#### VOD Endpoints
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/vods/list/<streamer>` | GET | List VODs for a streamer |
+| `/api/vods/clip` | POST | Create clip from VOD |
+| `/api/vods/clip/status/<job_id>` | GET | Check VOD clip job status |
+| `/api/vods/analyze/<vod_id>` | POST | Analyze VOD for highlights |
+
+#### Review Endpoints
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/review/pending` | GET | Get clips pending review |
+| `/api/review/<id>/approve` | POST | Approve a clip |
+| `/api/review/<id>/reject` | POST | Reject a clip |
+| `/api/review/bulk` | POST | Bulk approve/reject |
+
+### Future API Layer (SaaS)
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -80,7 +121,29 @@ This document outlines the future architecture for scaling Clip Automater to a m
 | `/api/uploads` | POST | Queue clip for upload |
 | `/ws/stats` | WebSocket | Real-time stats per streamer |
 
-### Worker Types
+### New Components (v2.0)
+
+#### VOD Module (`src/vod/`)
+| File | Purpose |
+|------|---------|
+| `vod_clipper.py` | Download VOD segments and create clips |
+| `chat_analyzer.py` | Analyze chat replay to find highlight moments |
+
+#### Clip Editor (`src/clip/editor.py`)
+| Function | Purpose |
+|----------|---------|
+| `trim_clip()` | Trim clip with in/out points using FFmpeg |
+| `get_metadata()` | Extract clip duration and format info |
+| `preview_trim()` | Generate preview of trimmed section |
+
+#### Streamer Search (`src/web/streamer_search.py`)
+| Function | Purpose |
+|----------|---------|
+| `search_kick()` | Search Kick API for streamers by name |
+| `get_live_status()` | Check if streamer is currently live |
+| `add_streamer()` | Add streamer to monitoring config |
+
+### Worker Types (Future SaaS)
 
 | Worker | Responsibility |
 |--------|----------------|
@@ -88,6 +151,8 @@ This document outlines the future architecture for scaling Clip Automater to a m
 | `upload-worker` | YouTube/TikTok uploads |
 | `cleanup-worker` | Delete rejected clips, old segments |
 | `thumbnail-worker` | Generate thumbnails async |
+| `vod-worker` | Process VOD clip requests |
+| `analysis-worker` | Analyze VOD chat for highlights |
 
 ### Storage Strategy
 
@@ -199,6 +264,51 @@ K8s Cluster
   - Worker queue depth > 100
   - Disk usage > 80%
   - Memory usage > 90%
+
+## Dashboard Features
+
+### Tabs
+| Tab | Description |
+|-----|-------------|
+| **Clips** | View all clips with thumbnails, hover preview |
+| **Review** | Approve/reject pending clips |
+| **Streamers** | Search and manage monitored streamers |
+| **VODs** | Browse past broadcasts, create clips |
+
+### Fullscreen Slide Deck Review
+
+Review clips one-by-one in a fullscreen modal with keyboard shortcuts:
+
+| Key | Action |
+|-----|--------|
+| `←` `→` | Navigate between clips |
+| `Space` | Play/pause video |
+| `A` | Approve clip |
+| `R` | Reject clip |
+| `F` | Toggle favorite |
+| `D` | Delete clip |
+| `Esc` | Close slideshow |
+
+### Clip Editor
+
+Trim clips with precise in/out points:
+
+| Key | Action |
+|-----|--------|
+| `I` | Set in-point (trim start) |
+| `O` | Set out-point (trim end) |
+| `P` | Preview trim |
+| `Space` | Play/pause |
+| `←` `→` | Seek 5 seconds |
+| `Esc` | Close editor |
+
+### Responsive Layout
+
+- Dashboard fits on screen without scrolling
+- Collapsible stream preview panel
+- Mobile-friendly navigation
+
+---
 
 ## Open Questions
 

@@ -110,9 +110,10 @@
         /* ===== MAIN LAYOUT ===== */
         .main-container {
             display: grid;
-            grid-template-columns: 1fr 350px;
+            grid-template-columns: 1fr 300px;
             gap: 0;
             height: calc(100vh - 60px);
+            overflow: hidden;
         }
 
         .left-panel {
@@ -120,6 +121,7 @@
             flex-direction: column;
             border-right: 1px solid var(--border);
             overflow: hidden;
+            height: 100%;
         }
 
         .right-panel {
@@ -127,38 +129,96 @@
             flex-direction: column;
             background: var(--bg-surface);
             overflow: hidden;
+            height: 100%;
+        }
+
+        /* ===== TOP SECTION (Stream + Stats Grid) ===== */
+        .top-section {
+            display: grid;
+            grid-template-columns: minmax(300px, 1fr) minmax(200px, 280px);
+            gap: 0;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
         /* ===== STREAM PLAYER ===== */
         .stream-section {
             background: var(--bg-primary);
             position: relative;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            max-height: 280px;
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .stream-section.collapsed {
+            max-height: 44px;
+        }
+
+        .stream-section.collapsed .stream-player {
+            display: none;
         }
 
         .stream-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 16px;
+            padding: 10px 16px;
             background: var(--bg-surface);
             border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .stream-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .stream-header h2 {
-            font-size: 0.95em;
+            font-size: 0.85em;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--text-secondary);
         }
 
+        .stream-collapse-btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stream-collapse-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .stream-collapse-btn .collapse-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .stream-section.collapsed .stream-collapse-btn .collapse-icon {
+            transform: rotate(180deg);
+        }
+
         .streamer-select {
             background: var(--bg-elevated);
             color: var(--text-primary);
             border: 1px solid var(--border);
-            padding: 6px 12px;
+            padding: 4px 10px;
             border-radius: 6px;
-            font-size: 0.9em;
+            font-size: 0.85em;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -174,7 +234,9 @@
         }
 
         .stream-player {
-            aspect-ratio: 16/9;
+            flex: 1;
+            min-height: 0;
+            max-height: 220px;
             background: var(--bg-primary);
             display: flex;
             align-items: center;
@@ -194,34 +256,92 @@
         }
 
         .stream-offline-icon {
-            font-size: 3em;
-            margin-bottom: 12px;
+            font-size: 2.5em;
+            margin-bottom: 8px;
             opacity: 0.5;
         }
 
         .stream-offline h3 {
-            font-size: 1.1em;
+            font-size: 0.95em;
             margin-bottom: 4px;
             color: var(--text-secondary);
         }
 
         .stream-offline p {
-            font-size: 0.85em;
+            font-size: 0.8em;
         }
 
-        /* ===== STATS PANEL ===== */
+        /* ===== INLINE STATS (in top section) ===== */
+        .inline-stats {
+            background: var(--bg-surface);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .inline-stats .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 0;
+        }
+
+        .inline-stats .stat-card {
+            padding: 10px 8px;
+        }
+
+        .inline-stats .stat-value {
+            font-size: 1.4em;
+        }
+
+        .inline-stats .stat-label {
+            font-size: 0.65em;
+        }
+
+        .inline-stats .criteria-section {
+            margin-bottom: 0;
+        }
+
+        .inline-stats .criteria-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .inline-stats .criteria-value {
+            font-size: 1.1em;
+        }
+
+        .inline-stats .criteria-label {
+            font-size: 0.65em;
+        }
+
+        .inline-stats .criteria-footer {
+            padding: 6px 12px;
+            font-size: 0.7em;
+            gap: 12px;
+        }
+
+        /* ===== STATS PANEL (Main area below top section) ===== */
         .stats-section {
             flex: 1;
-            padding: 16px;
+            padding: 12px 16px;
             overflow-y: auto;
             background: var(--bg-surface);
+            min-height: 0;
+        }
+
+        /* Hide main stats section stats-grid and criteria when inline is visible */
+        .stats-section .stats-grid,
+        .stats-section .criteria-section {
+            display: none;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 16px;
         }
 
         .stat-card {
@@ -572,6 +692,672 @@
             grid-column: 1 / -1;
         }
 
+        /* ===== STREAMERS TAB ===== */
+        .streamers-panel {
+            padding: 20px;
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .streamers-panel.active {
+            display: block;
+        }
+
+        .streamers-search-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .streamers-search-bar input {
+            flex: 1;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.2s;
+        }
+
+        .streamers-search-bar input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(145, 71, 255, 0.2);
+        }
+
+        .streamers-search-bar input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .streamers-search-bar button {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .streamers-search-bar button:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        .streamers-search-bar button:disabled {
+            background: var(--bg-elevated);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .streamers-section {
+            margin-bottom: 32px;
+        }
+
+        .streamers-section h3 {
+            font-size: 1em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .streamers-section h3 .count {
+            background: var(--accent-primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+        }
+
+        .streamer-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .streamer-card {
+            background: var(--bg-elevated);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.2s;
+        }
+
+        .streamer-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px rgba(145, 71, 255, 0.1);
+        }
+
+        .streamer-card.live {
+            border-color: var(--live);
+        }
+
+        .streamer-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--bg-surface);
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .streamer-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .streamer-avatar .live-indicator {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 16px;
+            height: 16px;
+            background: var(--live);
+            border: 2px solid var(--bg-elevated);
+            border-radius: 50%;
+        }
+
+        .streamer-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .streamer-name {
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .streamer-name .verified {
+            color: var(--accent-secondary);
+            font-size: 0.9em;
+        }
+
+        .streamer-status {
+            font-size: 0.85em;
+            color: var(--text-muted);
+        }
+
+        .streamer-status.live {
+            color: var(--live);
+            font-weight: 500;
+        }
+
+        .streamer-viewers {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .streamer-viewers .viewer-icon {
+            color: var(--live);
+        }
+
+        .streamer-category {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .streamer-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-add-streamer {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-add-streamer:hover {
+            background: #00e6b8;
+        }
+
+        .btn-add-streamer:disabled {
+            background: var(--bg-surface);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .btn-add-streamer.added {
+            background: var(--bg-surface);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .btn-remove-streamer {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-remove-streamer:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .no-results h4 {
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .search-loading {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+        }
+
+        .search-loading .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== VODs TAB ===== */
+        .vods-panel {
+            padding: 20px;
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .vods-panel.active {
+            display: block;
+        }
+
+        .vod-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+
+        .vod-selector select {
+            flex: 1;
+            max-width: 300px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .vod-selector select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(145, 71, 255, 0.2);
+        }
+
+        .vod-selector button {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .vod-selector button:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        .vod-selector button:disabled {
+            background: var(--bg-elevated);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .vod-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .vod-card {
+            background: var(--bg-elevated);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .vod-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(145, 71, 255, 0.15);
+        }
+
+        .vod-card.selected {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(145, 71, 255, 0.3);
+        }
+
+        .vod-thumbnail {
+            aspect-ratio: 16/9;
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vod-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .vod-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .vod-info {
+            padding: 12px 14px;
+        }
+
+        .vod-title {
+            font-size: 0.9em;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .vod-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .vod-clipper {
+            background: var(--bg-elevated);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            padding: 20px;
+        }
+
+        .vod-clipper h3 {
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .credit-cost {
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .vod-clip-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+            margin-bottom: 24px;
+        }
+
+        .vod-clip-form .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .vod-clip-form label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .vod-clip-form input {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-family: 'SF Mono', monospace;
+            width: 120px;
+            transition: all 0.2s;
+        }
+
+        .vod-clip-form input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(145, 71, 255, 0.2);
+        }
+
+        .vod-clip-form input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .vod-clip-form button {
+            background: var(--accent-secondary);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .vod-clip-form button:hover {
+            background: #00e6b8;
+        }
+
+        .vod-clip-form button:disabled {
+            background: var(--bg-surface);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .auto-detect-section {
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            margin-top: 8px;
+        }
+
+        .auto-detect-section h3 {
+            margin-bottom: 12px;
+        }
+
+        .auto-detect-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .auto-detect-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(145, 71, 255, 0.4);
+        }
+
+        .auto-detect-btn:disabled {
+            background: var(--bg-surface);
+            color: var(--text-muted);
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .detected-moments {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .moment-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .moment-card:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-surface-hover);
+        }
+
+        .moment-card.selected {
+            border-color: var(--accent-primary);
+            background: rgba(145, 71, 255, 0.1);
+        }
+
+        .moment-timestamp {
+            font-family: 'SF Mono', monospace;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--accent-secondary);
+            min-width: 80px;
+        }
+
+        .moment-info {
+            flex: 1;
+        }
+
+        .moment-trigger {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .moment-trigger.chat_velocity { background: var(--accent-primary); color: white; }
+        .moment-trigger.keyword { background: var(--accent-secondary); color: #000; }
+        .moment-trigger.combo { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; }
+        .moment-trigger.suggested { background: var(--warning); color: #000; }
+
+        .moment-description {
+            font-size: 0.85em;
+            color: var(--text-muted);
+        }
+
+        .moment-checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent-primary);
+        }
+
+        .clip-selected-btn {
+            margin-top: 16px;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clip-selected-btn:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        .clip-selected-btn:disabled {
+            background: var(--bg-surface);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .vod-progress {
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--bg-surface);
+            border-radius: 6px;
+            display: none;
+        }
+
+        .vod-progress.active {
+            display: block;
+        }
+
+        .vod-progress-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .vod-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .vod-progress-text {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .no-vods {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .no-vods h4 {
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
         /* ===== CLIPS SIDEBAR ===== */
         .clips-sidebar-header {
             padding: 14px 16px;
@@ -760,6 +1546,8 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .dashboard-view.hidden {
@@ -996,6 +1784,11 @@
             color: white;
         }
 
+        .clip-action-btn.edit:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
         /* ===== VIDEO MODAL ===== */
         .modal {
             display: none;
@@ -1084,9 +1877,45 @@
         }
 
         /* ===== RESPONSIVE ===== */
+        @media (max-width: 1400px) {
+            .main-container {
+                grid-template-columns: 1fr 280px;
+            }
+
+            .top-section {
+                grid-template-columns: minmax(280px, 1fr) minmax(180px, 240px);
+            }
+        }
+
         @media (max-width: 1200px) {
             .main-container {
-                grid-template-columns: 1fr 300px;
+                grid-template-columns: 1fr 260px;
+            }
+
+            .top-section {
+                grid-template-columns: 1fr;
+            }
+
+            .stream-section {
+                border-right: none;
+                max-height: 200px;
+            }
+
+            .stream-player {
+                max-height: 160px;
+            }
+
+            .inline-stats {
+                display: none;
+            }
+
+            /* Show the regular stats section elements when inline is hidden */
+            .stats-section .stats-grid {
+                display: grid;
+            }
+
+            .stats-section .criteria-section {
+                display: block;
             }
         }
 
@@ -1099,8 +1928,20 @@
                 display: none;
             }
 
+            .top-section {
+                grid-template-columns: 1fr;
+            }
+
+            .stream-section {
+                max-height: 180px;
+            }
+
+            .stream-player {
+                max-height: 140px;
+            }
+
             .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
             }
         }
 
@@ -1113,8 +1954,16 @@
                 font-size: 1.1em;
             }
 
+            .stream-section {
+                max-height: 160px;
+            }
+
+            .stream-player {
+                max-height: 120px;
+            }
+
             .stats-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .clips-grid {
@@ -1123,6 +1972,15 @@
 
             .clips-filter-bar {
                 flex-direction: column;
+            }
+
+            .tab-bar {
+                padding: 6px 8px;
+            }
+
+            .tab-btn {
+                padding: 8px 12px;
+                font-size: 0.75em;
             }
         }
 
@@ -1142,6 +2000,782 @@
 
         ::-webkit-scrollbar-thumb:hover {
             background: var(--text-muted);
+        }
+
+        /* ===== CLIP EDITOR MODAL ===== */
+        .clip-editor {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2500;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .clip-editor.active {
+            display: flex;
+        }
+
+        .editor-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .editor-header h2 {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .editor-header h2 .filename {
+            color: var(--accent-secondary);
+            font-family: 'SF Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .editor-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 2em;
+            cursor: pointer;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .editor-close:hover {
+            color: var(--danger);
+        }
+
+        .editor-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .editor-video-container {
+            width: 100%;
+            max-width: 900px;
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .editor-video {
+            width: 100%;
+            display: block;
+        }
+
+        .editor-timeline {
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+            background: var(--bg-surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .timeline-bar {
+            position: relative;
+            height: 40px;
+            background: var(--bg-elevated);
+            border-radius: 6px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .timeline-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: var(--accent-primary);
+            opacity: 0.3;
+            pointer-events: none;
+            transition: width 0.1s linear;
+        }
+
+        .timeline-trim-region {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .timeline-in-marker,
+        .timeline-out-marker {
+            position: absolute;
+            top: -4px;
+            bottom: -4px;
+            width: 4px;
+            cursor: ew-resize;
+            z-index: 10;
+        }
+
+        .timeline-in-marker {
+            background: var(--accent-primary);
+            border-radius: 2px 0 0 2px;
+        }
+
+        .timeline-out-marker {
+            background: var(--accent-secondary);
+            border-radius: 0 2px 2px 0;
+        }
+
+        .timeline-in-marker::after,
+        .timeline-out-marker::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 20px;
+            background: inherit;
+            border-radius: 2px;
+        }
+
+        .timeline-in-marker::after {
+            left: -4px;
+        }
+
+        .timeline-out-marker::after {
+            right: -4px;
+        }
+
+        .timeline-playhead {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: white;
+            pointer-events: none;
+            z-index: 5;
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+        }
+
+        .timeline-playhead::after {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: -4px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid white;
+        }
+
+        .timeline-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        .timeline-current {
+            font-family: 'SF Mono', monospace;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .editor-controls {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .editor-control-group {
+            background: var(--bg-surface);
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .editor-control-group h4 {
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .point-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .point-control:last-child {
+            margin-bottom: 0;
+        }
+
+        .point-label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            min-width: 70px;
+        }
+
+        .point-label.in { color: var(--accent-primary); }
+        .point-label.out { color: var(--accent-secondary); }
+
+        .point-input {
+            flex: 1;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.9em;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .point-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(145, 71, 255, 0.2);
+        }
+
+        .point-btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .point-btn:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .point-btn.set-in:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .point-btn.set-out:hover {
+            background: var(--accent-secondary);
+            border-color: var(--accent-secondary);
+            color: #000;
+        }
+
+        .duration-display {
+            text-align: center;
+            padding: 12px;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+        }
+
+        .duration-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            font-family: 'SF Mono', monospace;
+            color: var(--accent-secondary);
+        }
+
+        .duration-label {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        .editor-actions {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .editor-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .editor-btn.preview {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .editor-btn.preview:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .editor-btn.reset {
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .editor-btn.reset:hover {
+            background: var(--bg-surface-hover);
+            color: var(--text-primary);
+        }
+
+        .editor-btn.export {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        .editor-btn.export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(145, 71, 255, 0.4);
+        }
+
+        .editor-btn.export:disabled {
+            opacity: 0.5;
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .editor-btn.cancel {
+            background: var(--bg-elevated);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .editor-btn.cancel:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .editor-progress {
+            width: 100%;
+            max-width: 900px;
+            padding: 16px;
+            background: var(--bg-surface);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        .editor-progress.active {
+            display: block;
+        }
+
+        .editor-progress-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .editor-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .editor-progress-text {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .editor-content {
+                padding: 16px;
+            }
+
+            .editor-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .editor-actions {
+                flex-direction: column;
+            }
+
+            .editor-btn {
+                justify-content: center;
+            }
+        }
+
+        /* ===== REVIEW SLIDESHOW OVERLAY ===== */
+        .review-slideshow {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.98);
+            z-index: 2000;
+            flex-direction: column;
+        }
+
+        .review-slideshow.active {
+            display: flex;
+        }
+
+        .slideshow-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .slideshow-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .slideshow-nav-btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slideshow-nav-btn:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .slideshow-nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .slideshow-nav-btn:disabled:hover {
+            background: var(--bg-elevated);
+            border-color: var(--border);
+        }
+
+        .slideshow-progress {
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .slideshow-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 2em;
+            cursor: pointer;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .slideshow-close:hover {
+            color: var(--danger);
+        }
+
+        .slideshow-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        .slideshow-video-container {
+            max-width: 1200px;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        .slideshow-video {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 12px;
+            background: #000;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .slideshow-meta {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.95em;
+        }
+
+        .slideshow-meta-streamer {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .slideshow-meta-trigger {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin: 0 8px;
+        }
+
+        .slideshow-meta-trigger.chat_velocity { background: var(--accent-primary); color: white; }
+        .slideshow-meta-trigger.keyword { background: var(--accent-secondary); color: #000; }
+        .slideshow-meta-trigger.viewer { background: var(--warning); color: #000; }
+        .slideshow-meta-trigger.combo { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; }
+
+        .slideshow-meta-time {
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        .slideshow-footer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 24px;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border);
+        }
+
+        .slideshow-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .slideshow-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .slideshow-action-btn .kbd {
+            display: inline-block;
+            padding: 2px 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .slideshow-action-btn.approve {
+            background: var(--success);
+            color: white;
+        }
+
+        .slideshow-action-btn.approve:hover {
+            background: #00e6b8;
+            box-shadow: 0 0 20px rgba(0, 212, 170, 0.4);
+        }
+
+        .slideshow-action-btn.reject {
+            background: var(--danger);
+            color: white;
+        }
+
+        .slideshow-action-btn.reject:hover {
+            background: var(--danger-hover);
+            box-shadow: 0 0 20px rgba(235, 64, 52, 0.4);
+        }
+
+        .slideshow-action-btn.favorite {
+            background: var(--bg-elevated);
+            color: var(--gold);
+            border: 1px solid var(--border);
+        }
+
+        .slideshow-action-btn.favorite:hover {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+        }
+
+        .slideshow-action-btn.favorite.active {
+            background: var(--gold);
+            color: #000;
+        }
+
+        .slideshow-action-btn.delete {
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .slideshow-action-btn.delete:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .slideshow-action-btn.skip {
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .slideshow-action-btn.skip:hover {
+            background: var(--bg-surface-hover);
+            color: var(--text-primary);
+        }
+
+        .slideshow-options {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        .slideshow-options input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-primary);
+            cursor: pointer;
+        }
+
+        .slideshow-options label {
+            cursor: pointer;
+        }
+
+        .slideshow-empty {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 60px;
+        }
+
+        .slideshow-empty h3 {
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .slideshow-keyboard-hint {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            padding: 8px 24px;
+            background: var(--bg-elevated);
+            border-top: 1px solid var(--border);
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .slideshow-keyboard-hint span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .slideshow-keyboard-hint kbd {
+            display: inline-block;
+            padding: 2px 6px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.95em;
+        }
+
+        .btn-review-mode {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-review-mode:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(145, 71, 255, 0.4);
+        }
+
+        .btn-review-mode:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        @media (max-width: 768px) {
+            .slideshow-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .slideshow-action-btn {
+                justify-content: center;
+            }
+
+            .slideshow-keyboard-hint {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -1165,32 +2799,88 @@
         <div class="left-panel">
             <!-- Dashboard View -->
             <div class="dashboard-view" id="dashboardView">
-                <!-- Stream Section -->
-                <div class="stream-section">
-                    <div class="stream-header">
-                        <h2>Live Stream</h2>
-                        <select class="streamer-select" id="streamerSelect" onchange="changeStreamer()">
-                            {% for streamer in streamers %}
-                            <option value="{{ streamer }}">{{ streamer }}</option>
-                            {% else %}
-                            <option value="">No streamers configured</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="stream-player" id="streamPlayer">
-                        {% if streamers %}
-                        <iframe id="streamIframe" src="https://player.kick.com/{{ streamers[0] }}" allowfullscreen></iframe>
-                        {% else %}
-                        <div class="stream-offline">
-                            <div class="stream-offline-icon">&#128250;</div>
-                            <h3>No Streamers Configured</h3>
-                            <p>Add streamers to config/streamers.json</p>
+                <!-- Top Section: Stream + Inline Stats side by side -->
+                <div class="top-section">
+                    <!-- Stream Section -->
+                    <div class="stream-section" id="streamSection">
+                        <div class="stream-header">
+                            <div class="stream-header-left">
+                                <h2>Live Stream</h2>
+                                <button class="stream-collapse-btn" onclick="toggleStreamCollapse()" title="Collapse/Expand stream">
+                                    <span class="collapse-icon">&#9660;</span>
+                                    <span class="collapse-text">Hide</span>
+                                </button>
+                            </div>
+                            <select class="streamer-select" id="streamerSelect" onchange="changeStreamer()">
+                                {% for streamer in streamers %}
+                                <option value="{{ streamer }}">{{ streamer }}</option>
+                                {% else %}
+                                <option value="">No streamers configured</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        {% endif %}
+                        <div class="stream-player" id="streamPlayer">
+                            {% if streamers %}
+                            <iframe id="streamIframe" src="https://player.kick.com/{{ streamers[0] }}" allowfullscreen></iframe>
+                            {% else %}
+                            <div class="stream-offline">
+                                <div class="stream-offline-icon">&#128250;</div>
+                                <h3>No Streamers Configured</h3>
+                                <p>Add streamers to config/streamers.json</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Inline Stats (visible on wider screens) -->
+                    <div class="inline-stats">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="statViewersInline">0</div>
+                                <div class="stat-label">Viewers</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="statChatVelocityInline">0</div>
+                                <div class="stat-label">Chat/min</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="statClipsTodayInline">0</div>
+                                <div class="stat-label">Clips Today</div>
+                            </div>
+                        </div>
+
+                        <!-- Clipping Criteria (compact) -->
+                        <div class="criteria-section">
+                            <div class="criteria-header">
+                                <h3>Clipping Criteria</h3>
+                            </div>
+                            <div class="criteria-grid">
+                                <div class="criteria-item">
+                                    <div class="criteria-value">{{ criteria.chat_velocity }}</div>
+                                    <div class="criteria-label">Chat msg/sec</div>
+                                </div>
+                                <div class="criteria-item">
+                                    <div class="criteria-value">{{ criteria.keyword_threshold }}</div>
+                                    <div class="criteria-label">Keywords</div>
+                                </div>
+                                <div class="criteria-item">
+                                    <div class="criteria-value">{{ criteria.emote_threshold }}</div>
+                                    <div class="criteria-label">Emotes</div>
+                                </div>
+                                <div class="criteria-item">
+                                    <div class="criteria-value">{{ criteria.viewer_spike }}x</div>
+                                    <div class="criteria-label">Viewer spike</div>
+                                </div>
+                            </div>
+                            <div class="criteria-footer">
+                                <span>Cooldown: {{ criteria.cooldown }}s</span>
+                                <span>Clip: {{ criteria.clip_length }}s</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Stats Section -->
+                <!-- Stats Section (main content area) -->
                 <div class="stats-section">
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -1318,7 +3008,97 @@
             <div class="tab-bar">
                 <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-btn" onclick="switchTab('clips')">All Clips</button>
+                <button class="tab-btn" onclick="switchTab('vods')">VODs</button>
+                <button class="tab-btn" onclick="switchTab('streamers')">Streamers</button>
                 <button class="tab-btn" onclick="switchTab('review')">Review <span id="pendingCount" class="pending-badge" style="display:none;">0</span></button>
+            </div>
+
+            <!-- VODs Panel -->
+            <div id="vodsView" class="vods-panel">
+                <div class="vod-selector">
+                    <select id="vodStreamerSelect">
+                        <option value="">Select streamer...</option>
+                        {% for streamer in streamers %}
+                        <option value="{{ streamer }}">{{ streamer }}</option>
+                        {% endfor %}
+                    </select>
+                    <button onclick="loadVods()" id="loadVodsBtn">Load VODs</button>
+                </div>
+
+                <div class="vod-list" id="vodList">
+                    <div class="no-vods">
+                        <h4>Select a streamer to load VODs</h4>
+                        <p>Choose a streamer above and click "Load VODs" to see their past broadcasts</p>
+                    </div>
+                </div>
+
+                <div class="vod-clipper" id="vodClipper" style="display: none;">
+                    <h3>Manual Clip</h3>
+                    <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 16px;">
+                        Selected VOD: <strong id="selectedVodTitle">None</strong>
+                    </p>
+                    <div class="vod-clip-form">
+                        <div class="form-group">
+                            <label>Start Time</label>
+                            <input type="text" id="clipStartTime" placeholder="01:23:45">
+                        </div>
+                        <div class="form-group">
+                            <label>End Time</label>
+                            <input type="text" id="clipEndTime" placeholder="01:24:30">
+                        </div>
+                        <button onclick="createVodClip()" id="createClipBtn">Create Clip</button>
+                    </div>
+
+                    <div class="vod-progress" id="clipProgress">
+                        <div class="vod-progress-bar">
+                            <div class="vod-progress-fill" id="clipProgressFill"></div>
+                        </div>
+                        <div class="vod-progress-text" id="clipProgressText">Starting...</div>
+                    </div>
+
+                    <div class="auto-detect-section">
+                        <h3>Auto-Detect Highlights <span class="credit-cost">1 credit</span></h3>
+                        <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 12px;">
+                            Analyze chat replay to find interesting moments automatically.
+                        </p>
+                        <button class="auto-detect-btn" onclick="analyzeVod()" id="analyzeVodBtn">
+                            Analyze VOD for Highlights
+                        </button>
+                        <div class="detected-moments" id="detectedMoments">
+                            <!-- Detected moments will appear here -->
+                        </div>
+                        <button class="clip-selected-btn" id="clipSelectedBtn" style="display: none;" onclick="clipSelectedMoments()">
+                            Clip Selected Moments (0)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Streamers Panel -->
+            <div id="streamersView" class="streamers-panel">
+                <div class="streamers-search-bar">
+                    <input type="text" id="streamerSearchInput" placeholder="Search for streamers on Kick..." onkeypress="if(event.key==='Enter')searchStreamers()">
+                    <button onclick="searchStreamers()" id="searchBtn">Search</button>
+                </div>
+
+                <!-- Search Results Section -->
+                <div class="streamers-section" id="searchResultsSection" style="display: none;">
+                    <h3>Search Results <span class="count" id="searchResultsCount">0</span></h3>
+                    <div class="streamer-results-grid" id="searchResultsGrid">
+                        <!-- Search results will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Currently Monitoring Section -->
+                <div class="streamers-section">
+                    <h3>Currently Monitoring <span class="count" id="monitoredCount">0</span></h3>
+                    <div class="streamer-results-grid" id="monitoredStreamersGrid">
+                        <div class="no-results" id="noMonitoredMessage">
+                            <h4>No streamers being monitored</h4>
+                            <p>Search for streamers above to add them to your monitoring list</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Review Panel (hidden by default) -->
@@ -1326,6 +3106,9 @@
                 <div class="review-header">
                     <h3>Pending Review</h3>
                     <div class="review-actions-bar">
+                        <button class="btn-review-mode" id="enterReviewModeBtn" onclick="enterReviewMode()">
+                            &#9654; Enter Review Mode
+                        </button>
                         <button class="btn-approve-all" onclick="bulkAction('approve')">Approve All</button>
                         <button class="btn-reject-all" onclick="bulkAction('reject')">Reject All</button>
                     </div>
@@ -1388,6 +3171,147 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Review Slideshow Overlay -->
+    <div class="review-slideshow" id="reviewSlideshow">
+        <div class="slideshow-header">
+            <div class="slideshow-nav">
+                <button class="slideshow-nav-btn" id="slideshowPrev" onclick="slideshowPrev()" title="Previous (Left Arrow)">
+                    &#8592;
+                </button>
+                <span class="slideshow-progress" id="slideshowProgress">Clip 1 of 0</span>
+                <button class="slideshow-nav-btn" id="slideshowNext" onclick="slideshowNext()" title="Next (Right Arrow)">
+                    &#8594;
+                </button>
+            </div>
+            <button class="slideshow-close" onclick="closeSlideshow()" title="Close (Escape)">&times;</button>
+        </div>
+        <div class="slideshow-content">
+            <div class="slideshow-video-container">
+                <video class="slideshow-video" id="slideshowVideo" controls></video>
+            </div>
+            <div class="slideshow-meta" id="slideshowMeta">
+                <span class="slideshow-meta-streamer" id="slideshowStreamer">streamer</span>
+                <span class="slideshow-meta-trigger" id="slideshowTrigger">trigger</span>
+                <span class="slideshow-meta-time" id="slideshowTime">2 min ago</span>
+            </div>
+        </div>
+        <div class="slideshow-footer">
+            <div class="slideshow-actions">
+                <button class="slideshow-action-btn approve" onclick="slideshowApprove()">
+                    <span class="kbd">A</span> Approve
+                </button>
+                <button class="slideshow-action-btn reject" onclick="slideshowReject()">
+                    <span class="kbd">R</span> Reject
+                </button>
+                <button class="slideshow-action-btn favorite" id="slideshowFavBtn" onclick="slideshowToggleFavorite()">
+                    <span class="kbd">F</span> Favorite
+                </button>
+                <button class="slideshow-action-btn delete" onclick="slideshowDelete()">
+                    <span class="kbd">D</span> Delete
+                </button>
+                <button class="slideshow-action-btn skip" onclick="slideshowNext()">
+                    <span class="kbd">&#8594;</span> Skip
+                </button>
+            </div>
+            <div class="slideshow-options">
+                <input type="checkbox" id="slideshowAutoAdvance" checked>
+                <label for="slideshowAutoAdvance">Auto-advance after action</label>
+            </div>
+        </div>
+        <div class="slideshow-keyboard-hint">
+            <span><kbd>&#8592;</kbd><kbd>&#8594;</kbd> Navigate</span>
+            <span><kbd>Space</kbd> Play/Pause</span>
+            <span><kbd>A</kbd> Approve</span>
+            <span><kbd>R</kbd> Reject</span>
+            <span><kbd>F</kbd> Favorite</span>
+            <span><kbd>E</kbd> Edit</span>
+            <span><kbd>D</kbd> Delete</span>
+            <span><kbd>Esc</kbd> Close</span>
+        </div>
+    </div>
+
+    <!-- Clip Editor Modal -->
+    <div class="clip-editor" id="clipEditor">
+        <div class="editor-header">
+            <h2>Edit Clip: <span class="filename" id="editorFilename">clip.mp4</span></h2>
+            <button class="editor-close" onclick="closeEditor()" title="Close (Escape)">&times;</button>
+        </div>
+        <div class="editor-content">
+            <!-- Video Player -->
+            <div class="editor-video-container">
+                <video class="editor-video" id="editorVideo" controls>
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <!-- Timeline -->
+            <div class="editor-timeline">
+                <div class="timeline-bar" id="timelineBar" onclick="seekToPosition(event)">
+                    <div class="timeline-progress" id="timelineProgress"></div>
+                    <div class="timeline-trim-region" id="timelineTrimRegion"></div>
+                    <div class="timeline-in-marker" id="timelineInMarker" style="left: 0%"></div>
+                    <div class="timeline-out-marker" id="timelineOutMarker" style="left: 100%"></div>
+                    <div class="timeline-playhead" id="timelinePlayhead" style="left: 0%"></div>
+                </div>
+                <div class="timeline-info">
+                    <span>Current: <span class="timeline-current" id="timelineCurrent">00:00.0</span></span>
+                    <span>Duration: <span id="timelineTotal">00:00.0</span></span>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="editor-controls">
+                <!-- In/Out Points -->
+                <div class="editor-control-group">
+                    <h4>Trim Points</h4>
+                    <div class="point-control">
+                        <span class="point-label in">In Point:</span>
+                        <input type="text" class="point-input" id="inPointInput" value="00:00.0" onchange="updateInPoint(this.value)">
+                        <button class="point-btn set-in" onclick="setInPoint()">Set In</button>
+                    </div>
+                    <div class="point-control">
+                        <span class="point-label out">Out Point:</span>
+                        <input type="text" class="point-input" id="outPointInput" value="00:00.0" onchange="updateOutPoint(this.value)">
+                        <button class="point-btn set-out" onclick="setOutPoint()">Set Out</button>
+                    </div>
+                </div>
+
+                <!-- Duration -->
+                <div class="editor-control-group">
+                    <h4>Trimmed Duration</h4>
+                    <div class="duration-display">
+                        <div class="duration-value" id="trimDuration">0.0s</div>
+                        <div class="duration-label">seconds</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="editor-actions">
+                <button class="editor-btn preview" onclick="previewTrim()">
+                    &#9658; Preview Trim
+                </button>
+                <button class="editor-btn reset" onclick="resetTrim()">
+                    &#8634; Reset
+                </button>
+                <button class="editor-btn cancel" onclick="closeEditor()">
+                    Cancel
+                </button>
+                <button class="editor-btn export" id="exportTrimBtn" onclick="exportTrimmedClip()">
+                    &#10003; Export Trimmed
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="editor-progress" id="editorProgress">
+                <div class="editor-progress-bar">
+                    <div class="editor-progress-fill" id="editorProgressFill"></div>
+                </div>
+                <div class="editor-progress-text" id="editorProgressText">Starting...</div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ===== STATE =====
         let currentTab = 'dashboard';
@@ -1409,16 +3333,29 @@
             const dashboardView = document.getElementById('dashboardView');
             const clipsView = document.getElementById('fullClipsView');
             const reviewView = document.getElementById('reviewView');
+            const streamersView = document.getElementById('streamersView');
+            const vodsView = document.getElementById('vodsView');
 
             // Hide all views
             dashboardView.classList.add('hidden');
             clipsView.classList.remove('active');
             if (reviewView) reviewView.style.display = 'none';
+            if (streamersView) streamersView.classList.remove('active');
+            if (vodsView) vodsView.classList.remove('active');
 
             if (tab === 'dashboard') {
                 dashboardView.classList.remove('hidden');
             } else if (tab === 'clips') {
                 clipsView.classList.add('active');
+            } else if (tab === 'vods') {
+                if (vodsView) {
+                    vodsView.classList.add('active');
+                }
+            } else if (tab === 'streamers') {
+                if (streamersView) {
+                    streamersView.classList.add('active');
+                    loadMonitoredStreamers();
+                }
             } else if (tab === 'review') {
                 if (reviewView) {
                     reviewView.style.display = 'block';
@@ -1621,6 +3558,20 @@
             }
         }
 
+        function toggleStreamCollapse() {
+            const section = document.getElementById('streamSection');
+            const btn = section.querySelector('.stream-collapse-btn');
+            const textSpan = btn.querySelector('.collapse-text');
+
+            section.classList.toggle('collapsed');
+
+            if (section.classList.contains('collapsed')) {
+                textSpan.textContent = 'Show';
+            } else {
+                textSpan.textContent = 'Hide';
+            }
+        }
+
         // ===== CLIP FILTERING =====
         function filterClips() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
@@ -1797,9 +3748,23 @@
 
             if (currentStreamer && stats[currentStreamer]) {
                 const s = stats[currentStreamer];
-                document.getElementById('statViewers').textContent = formatNumber(s.viewers || 0);
-                document.getElementById('statChatVelocity').textContent = Math.round(s.chat_velocity || 0);
-                document.getElementById('statClipsToday').textContent = s.clips_today || 0;
+                const viewers = formatNumber(s.viewers || 0);
+                const chatVelocity = Math.round(s.chat_velocity || 0);
+                const clipsToday = s.clips_today || 0;
+
+                // Update main stats
+                document.getElementById('statViewers').textContent = viewers;
+                document.getElementById('statChatVelocity').textContent = chatVelocity;
+                document.getElementById('statClipsToday').textContent = clipsToday;
+
+                // Update inline stats (for top section)
+                const viewersInline = document.getElementById('statViewersInline');
+                const chatInline = document.getElementById('statChatVelocityInline');
+                const clipsInline = document.getElementById('statClipsTodayInline');
+
+                if (viewersInline) viewersInline.textContent = viewers;
+                if (chatInline) chatInline.textContent = chatVelocity;
+                if (clipsInline) clipsInline.textContent = clipsToday;
             }
         }
 
@@ -1873,9 +3838,1320 @@
                 .catch(err => console.error('Failed to load favorites:', err));
         }
 
+        // ===== STREAMER SEARCH & MANAGEMENT =====
+        let searchResults = [];
+        let monitoredStreamers = [];
+
+        async function searchStreamers() {
+            const input = document.getElementById('streamerSearchInput');
+            const query = input.value.trim();
+
+            if (!query) {
+                showToast('Please enter a search term', 'warning');
+                return;
+            }
+
+            const searchBtn = document.getElementById('searchBtn');
+            const resultsSection = document.getElementById('searchResultsSection');
+            const resultsGrid = document.getElementById('searchResultsGrid');
+
+            // Show loading state
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Searching...';
+            resultsSection.style.display = 'block';
+            resultsGrid.innerHTML = '<div class="search-loading"><div class="spinner"></div>Searching Kick...</div>';
+
+            try {
+                const response = await fetch(`/api/streamers/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    searchResults = data.results;
+                    renderSearchResults(data.results);
+                    document.getElementById('searchResultsCount').textContent = data.results.length;
+                } else {
+                    resultsGrid.innerHTML = `<div class="no-results"><h4>Search failed</h4><p>${data.error || 'Unknown error'}</p></div>`;
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                resultsGrid.innerHTML = '<div class="no-results"><h4>Search failed</h4><p>Could not connect to the server</p></div>';
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+        }
+
+        function renderSearchResults(results) {
+            const grid = document.getElementById('searchResultsGrid');
+
+            if (results.length === 0) {
+                grid.innerHTML = '<div class="no-results"><h4>No streamers found</h4><p>Try a different search term</p></div>';
+                return;
+            }
+
+            grid.innerHTML = results.map(s => `
+                <div class="streamer-card ${s.is_live ? 'live' : ''}">
+                    <div class="streamer-avatar">
+                        ${s.thumbnail ? `<img src="${s.thumbnail}" alt="${s.username}" onerror="this.style.display='none'">` : ''}
+                        ${s.is_live ? '<div class="live-indicator"></div>' : ''}
+                    </div>
+                    <div class="streamer-info">
+                        <div class="streamer-name">
+                            ${s.display_name || s.username}
+                            ${s.verified ? '<span class="verified" title="Verified">&#10003;</span>' : ''}
+                        </div>
+                        <div class="streamer-status ${s.is_live ? 'live' : ''}">
+                            ${s.is_live ? 'LIVE' : 'Offline'}
+                        </div>
+                        ${s.is_live ? `
+                            <div class="streamer-viewers">
+                                <span class="viewer-icon">&#9679;</span>
+                                ${formatNumber(s.viewers)} viewers
+                            </div>
+                            ${s.category ? `<div class="streamer-category">${s.category}</div>` : ''}
+                        ` : ''}
+                    </div>
+                    <div class="streamer-actions">
+                        <button class="btn-add-streamer ${s.is_monitored ? 'added' : ''}"
+                                onclick="addStreamer('${s.username}')"
+                                ${s.is_monitored ? 'disabled' : ''}>
+                            ${s.is_monitored ? 'Monitoring' : 'Add'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadMonitoredStreamers() {
+            const grid = document.getElementById('monitoredStreamersGrid');
+            const noMessage = document.getElementById('noMonitoredMessage');
+
+            try {
+                const response = await fetch('/api/streamers/list');
+                const data = await response.json();
+
+                if (data.success) {
+                    monitoredStreamers = data.streamers;
+                    document.getElementById('monitoredCount').textContent = data.streamers.length;
+
+                    if (data.streamers.length === 0) {
+                        grid.innerHTML = '';
+                        if (noMessage) {
+                            noMessage.style.display = 'block';
+                            grid.appendChild(noMessage);
+                        }
+                    } else {
+                        renderMonitoredStreamers(data.streamers);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading monitored streamers:', error);
+            }
+        }
+
+        function renderMonitoredStreamers(streamers) {
+            const grid = document.getElementById('monitoredStreamersGrid');
+
+            grid.innerHTML = streamers.map(s => `
+                <div class="streamer-card ${s.is_live ? 'live' : ''}">
+                    <div class="streamer-avatar">
+                        ${s.is_live ? '<div class="live-indicator"></div>' : ''}
+                    </div>
+                    <div class="streamer-info">
+                        <div class="streamer-name">${s.username}</div>
+                        <div class="streamer-status ${s.is_live ? 'live' : ''}">
+                            ${s.is_live ? 'LIVE' : 'Offline'}
+                        </div>
+                        ${s.is_live ? `
+                            <div class="streamer-viewers">
+                                <span class="viewer-icon">&#9679;</span>
+                                ${formatNumber(s.viewers)} viewers
+                            </div>
+                            ${s.category ? `<div class="streamer-category">${s.category}</div>` : ''}
+                            ${s.title ? `<div class="streamer-category" title="${s.title}">${s.title}</div>` : ''}
+                        ` : ''}
+                    </div>
+                    <div class="streamer-actions">
+                        <button class="btn-remove-streamer" onclick="removeStreamer('${s.username}')">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function addStreamer(username) {
+            try {
+                const response = await fetch('/api/streamers/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`Added ${username} to monitoring list`, 'success');
+
+                    // Update search results to show as monitored
+                    searchResults = searchResults.map(s => {
+                        if (s.username.toLowerCase() === username.toLowerCase()) {
+                            s.is_monitored = true;
+                        }
+                        return s;
+                    });
+                    renderSearchResults(searchResults);
+
+                    // Reload monitored streamers
+                    loadMonitoredStreamers();
+
+                    // Update streamer dropdown on dashboard
+                    updateStreamerDropdown(username);
+                } else {
+                    showToast(data.error || 'Failed to add streamer', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding streamer:', error);
+                showToast('Failed to add streamer', 'error');
+            }
+        }
+
+        async function removeStreamer(username) {
+            if (!confirm(`Remove ${username} from monitoring list?`)) return;
+
+            try {
+                const response = await fetch(`/api/streamers/${username}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`Removed ${username} from monitoring list`, 'success');
+
+                    // Update search results if visible
+                    searchResults = searchResults.map(s => {
+                        if (s.username.toLowerCase() === username.toLowerCase()) {
+                            s.is_monitored = false;
+                        }
+                        return s;
+                    });
+                    if (searchResults.length > 0) {
+                        renderSearchResults(searchResults);
+                    }
+
+                    // Reload monitored streamers
+                    loadMonitoredStreamers();
+
+                    // Remove from streamer dropdown
+                    removeFromStreamerDropdown(username);
+                } else {
+                    showToast(data.error || 'Failed to remove streamer', 'error');
+                }
+            } catch (error) {
+                console.error('Error removing streamer:', error);
+                showToast('Failed to remove streamer', 'error');
+            }
+        }
+
+        function updateStreamerDropdown(username) {
+            const select = document.getElementById('streamerSelect');
+            if (select) {
+                // Check if already exists
+                const exists = Array.from(select.options).some(opt => opt.value.toLowerCase() === username.toLowerCase());
+                if (!exists) {
+                    const option = document.createElement('option');
+                    option.value = username;
+                    option.textContent = username;
+                    select.appendChild(option);
+                }
+            }
+        }
+
+        function removeFromStreamerDropdown(username) {
+            const select = document.getElementById('streamerSelect');
+            if (select) {
+                Array.from(select.options).forEach(opt => {
+                    if (opt.value.toLowerCase() === username.toLowerCase()) {
+                        opt.remove();
+                    }
+                });
+            }
+        }
+
+        // ===== VOD FUNCTIONS =====
+        let currentVods = [];
+        let selectedVod = null;
+        let selectedMoments = new Set();
+        let currentClipJobId = null;
+
+        async function loadVods() {
+            const select = document.getElementById('vodStreamerSelect');
+            const streamer = select.value;
+
+            if (!streamer) {
+                showToast('Please select a streamer', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('loadVodsBtn');
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+
+            const vodList = document.getElementById('vodList');
+            vodList.innerHTML = '<div class="no-vods"><div class="spinner" style="width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent-primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;"></div>Loading VODs...</div>';
+
+            try {
+                const response = await fetch(`/api/vods/list/${streamer}?limit=20`);
+                const data = await response.json();
+
+                if (data.success && data.vods.length > 0) {
+                    currentVods = data.vods;
+                    renderVodList(data.vods);
+                } else {
+                    vodList.innerHTML = '<div class="no-vods"><h4>No VODs found</h4><p>This streamer has no past broadcasts available</p></div>';
+                }
+            } catch (error) {
+                console.error('Error loading VODs:', error);
+                vodList.innerHTML = '<div class="no-vods"><h4>Error loading VODs</h4><p>Please try again later</p></div>';
+                showToast('Failed to load VODs', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Load VODs';
+            }
+        }
+
+        function renderVodList(vods) {
+            const vodList = document.getElementById('vodList');
+
+            vodList.innerHTML = vods.map((vod, index) => {
+                const date = new Date(vod.created_at).toLocaleDateString();
+                return `
+                    <div class="vod-card" data-vod-id="${vod.id}" onclick="selectVod(${index})">
+                        <div class="vod-thumbnail">
+                            <img src="${vod.thumbnail_url || '/static/placeholder.jpg'}" alt="${vod.title}" onerror="this.style.display='none'">
+                            <span class="vod-duration">${vod.duration_display || '--:--'}</span>
+                        </div>
+                        <div class="vod-info">
+                            <div class="vod-title" title="${vod.title}">${vod.title}</div>
+                            <div class="vod-meta">
+                                <span>${vod.views.toLocaleString()} views</span>
+                                <span>${date}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectVod(index) {
+            selectedVod = currentVods[index];
+
+            // Update selection UI
+            document.querySelectorAll('.vod-card').forEach((card, i) => {
+                card.classList.toggle('selected', i === index);
+            });
+
+            // Show clipper
+            const clipper = document.getElementById('vodClipper');
+            clipper.style.display = 'block';
+
+            // Update selected VOD info
+            document.getElementById('selectedVodTitle').textContent = selectedVod.title;
+
+            // Clear previous highlights
+            document.getElementById('detectedMoments').innerHTML = '';
+            document.getElementById('clipSelectedBtn').style.display = 'none';
+            selectedMoments.clear();
+
+            // Clear form
+            document.getElementById('clipStartTime').value = '';
+            document.getElementById('clipEndTime').value = '';
+
+            // Scroll to clipper
+            clipper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function createVodClip() {
+            if (!selectedVod) {
+                showToast('Please select a VOD first', 'error');
+                return;
+            }
+
+            const startTime = document.getElementById('clipStartTime').value.trim();
+            const endTime = document.getElementById('clipEndTime').value.trim();
+
+            if (!startTime || !endTime) {
+                showToast('Please enter start and end times', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('createClipBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+
+            const progress = document.getElementById('clipProgress');
+            progress.classList.add('active');
+            updateClipProgress(0, 'Starting clip creation...');
+
+            const streamer = document.getElementById('vodStreamerSelect').value;
+
+            try {
+                const response = await fetch('/api/vods/clip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        vod_id: selectedVod.id,
+                        start_time: startTime,
+                        end_time: endTime,
+                        streamer: streamer
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentClipJobId = data.job_id;
+                    showToast('Clip creation started', 'info');
+                    pollClipProgress(data.job_id);
+                } else {
+                    showToast(data.error || 'Failed to create clip', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Create Clip';
+                    progress.classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Error creating clip:', error);
+                showToast('Error creating clip', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Create Clip';
+                progress.classList.remove('active');
+            }
+        }
+
+        async function pollClipProgress(jobId) {
+            try {
+                const response = await fetch(`/api/vods/clip/status/${jobId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    updateClipProgress(data.progress, data.message);
+
+                    if (data.status === 'completed') {
+                        showToast('Clip created successfully!', 'success');
+                        document.getElementById('createClipBtn').disabled = false;
+                        document.getElementById('createClipBtn').textContent = 'Create Clip';
+
+                        // Keep progress visible briefly then hide
+                        setTimeout(() => {
+                            document.getElementById('clipProgress').classList.remove('active');
+                        }, 2000);
+                    } else if (data.status === 'failed') {
+                        showToast('Clip creation failed: ' + data.message, 'error');
+                        document.getElementById('createClipBtn').disabled = false;
+                        document.getElementById('createClipBtn').textContent = 'Create Clip';
+                        document.getElementById('clipProgress').classList.remove('active');
+                    } else {
+                        // Still processing, poll again
+                        setTimeout(() => pollClipProgress(jobId), 1000);
+                    }
+                }
+            } catch (error) {
+                console.error('Error polling clip status:', error);
+            }
+        }
+
+        function updateClipProgress(percent, message) {
+            document.getElementById('clipProgressFill').style.width = percent + '%';
+            document.getElementById('clipProgressText').textContent = message;
+        }
+
+        async function analyzeVod() {
+            if (!selectedVod) {
+                showToast('Please select a VOD first', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('analyzeVodBtn');
+            btn.disabled = true;
+            btn.textContent = 'Analyzing...';
+
+            const momentsDiv = document.getElementById('detectedMoments');
+            momentsDiv.innerHTML = '<div class="no-vods"><div class="spinner" style="width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent-primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;"></div>Analyzing chat replay...</div>';
+
+            try {
+                const response = await fetch(`/api/vods/analyze/${selectedVod.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        duration: selectedVod.duration
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.highlights.length > 0) {
+                    renderHighlights(data.highlights);
+                    showToast(`Found ${data.highlights.length} highlights (1 credit used)`, 'success');
+                } else if (data.success) {
+                    momentsDiv.innerHTML = '<div class="no-vods"><h4>No highlights detected</h4><p>Try manual clipping instead</p></div>';
+                } else {
+                    momentsDiv.innerHTML = '<div class="no-vods"><h4>Analysis failed</h4><p>' + (data.error || 'Unknown error') + '</p></div>';
+                    showToast('Analysis failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error analyzing VOD:', error);
+                momentsDiv.innerHTML = '<div class="no-vods"><h4>Error analyzing VOD</h4><p>Please try again</p></div>';
+                showToast('Error analyzing VOD', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Analyze VOD for Highlights';
+            }
+        }
+
+        function renderHighlights(highlights) {
+            const momentsDiv = document.getElementById('detectedMoments');
+            selectedMoments.clear();
+
+            momentsDiv.innerHTML = highlights.map((h, index) => `
+                <div class="moment-card" onclick="toggleMomentSelection(${index}, this)">
+                    <span class="moment-timestamp">${h.timestamp_display}</span>
+                    <div class="moment-info">
+                        <span class="moment-trigger ${h.trigger_type}">${h.trigger_type.replace('_', ' ')}</span>
+                        <div class="moment-description">${h.description}</div>
+                    </div>
+                    <input type="checkbox" class="moment-checkbox" data-index="${index}" onclick="event.stopPropagation(); toggleMomentSelection(${index}, this.closest('.moment-card'))">
+                </div>
+            `).join('');
+
+            // Store highlights for later use
+            window.detectedHighlights = highlights;
+
+            // Show the clip selected button
+            document.getElementById('clipSelectedBtn').style.display = 'block';
+            updateSelectedCount();
+        }
+
+        function toggleMomentSelection(index, card) {
+            const checkbox = card.querySelector('.moment-checkbox');
+
+            if (selectedMoments.has(index)) {
+                selectedMoments.delete(index);
+                card.classList.remove('selected');
+                checkbox.checked = false;
+            } else {
+                selectedMoments.add(index);
+                card.classList.add('selected');
+                checkbox.checked = true;
+            }
+
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const btn = document.getElementById('clipSelectedBtn');
+            const count = selectedMoments.size;
+            btn.textContent = `Clip Selected Moments (${count})`;
+            btn.disabled = count === 0;
+        }
+
+        async function clipSelectedMoments() {
+            if (selectedMoments.size === 0) {
+                showToast('Please select at least one moment', 'error');
+                return;
+            }
+
+            if (!selectedVod || !window.detectedHighlights) {
+                showToast('Please analyze a VOD first', 'error');
+                return;
+            }
+
+            const highlights = Array.from(selectedMoments).map(index => window.detectedHighlights[index]);
+            const streamer = document.getElementById('vodStreamerSelect').value;
+
+            const btn = document.getElementById('clipSelectedBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating clips...';
+
+            try {
+                const response = await fetch('/api/vods/clip/batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        vod_id: selectedVod.id,
+                        streamer: streamer,
+                        highlights: highlights,
+                        clip_duration: 45
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`Started creating ${data.total} clips`, 'success');
+                    pollBatchProgress(data.batch_id);
+                } else {
+                    showToast(data.error || 'Failed to start batch clipping', 'error');
+                    btn.disabled = false;
+                    updateSelectedCount();
+                }
+            } catch (error) {
+                console.error('Error creating batch clips:', error);
+                showToast('Error creating clips', 'error');
+                btn.disabled = false;
+                updateSelectedCount();
+            }
+        }
+
+        async function pollBatchProgress(batchId) {
+            try {
+                const response = await fetch(`/api/vods/clip/batch/${batchId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const btn = document.getElementById('clipSelectedBtn');
+                    btn.textContent = `Creating clips... (${data.completed}/${data.total})`;
+
+                    if (data.status === 'completed') {
+                        showToast(`Created ${data.completed} clips (${data.failed} failed)`, 'success');
+                        btn.disabled = false;
+                        updateSelectedCount();
+                    } else {
+                        setTimeout(() => pollBatchProgress(batchId), 2000);
+                    }
+                }
+            } catch (error) {
+                console.error('Error polling batch status:', error);
+            }
+        }
+
         // ===== INITIALIZATION =====
         loadFavorites();
         startPolling();
+
+        // ===== REVIEW SLIDESHOW =====
+        let slideshowClips = [];
+        let slideshowIndex = 0;
+        let slideshowActive = false;
+
+        function enterReviewMode() {
+            if (pendingClips.length === 0) {
+                showToast('No clips to review', 'info');
+                return;
+            }
+
+            slideshowClips = [...pendingClips];
+            slideshowIndex = 0;
+            slideshowActive = true;
+
+            const slideshow = document.getElementById('reviewSlideshow');
+            slideshow.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            updateSlideshowDisplay();
+        }
+
+        function closeSlideshow() {
+            slideshowActive = false;
+            const slideshow = document.getElementById('reviewSlideshow');
+            slideshow.classList.remove('active');
+            document.body.style.overflow = '';
+
+            const video = document.getElementById('slideshowVideo');
+            video.pause();
+            video.src = '';
+
+            // Reload pending clips to reflect any changes
+            loadPendingClips();
+        }
+
+        function updateSlideshowDisplay() {
+            if (slideshowClips.length === 0) {
+                closeSlideshow();
+                showToast('All clips reviewed!', 'success');
+                return;
+            }
+
+            // Ensure index is within bounds
+            if (slideshowIndex >= slideshowClips.length) {
+                slideshowIndex = slideshowClips.length - 1;
+            }
+            if (slideshowIndex < 0) {
+                slideshowIndex = 0;
+            }
+
+            const clip = slideshowClips[slideshowIndex];
+
+            // Update progress
+            document.getElementById('slideshowProgress').textContent =
+                `Clip ${slideshowIndex + 1} of ${slideshowClips.length}`;
+
+            // Update video
+            const video = document.getElementById('slideshowVideo');
+            video.src = clip.url;
+            video.play().catch(() => {}); // Autoplay may be blocked
+
+            // Update metadata
+            document.getElementById('slideshowStreamer').textContent = clip.streamer || 'unknown';
+
+            const triggerEl = document.getElementById('slideshowTrigger');
+            triggerEl.textContent = (clip.trigger_type || 'unknown').replace('_', ' ');
+            triggerEl.className = 'slideshow-meta-trigger ' + (clip.trigger_type || '');
+
+            // Format time ago
+            const timeAgo = formatTimeAgo(clip.created_at);
+            document.getElementById('slideshowTime').textContent = timeAgo;
+
+            // Update favorite button state
+            const favBtn = document.getElementById('slideshowFavBtn');
+            if (clip.favorite || favorites.has(clip.filename)) {
+                favBtn.classList.add('active');
+            } else {
+                favBtn.classList.remove('active');
+            }
+
+            // Update nav buttons
+            document.getElementById('slideshowPrev').disabled = slideshowIndex === 0;
+            document.getElementById('slideshowNext').disabled = slideshowIndex >= slideshowClips.length - 1;
+        }
+
+        function formatTimeAgo(dateStr) {
+            if (!dateStr) return 'unknown';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'just now';
+            if (diffMins < 60) return `${diffMins} min ago`;
+            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+            return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        }
+
+        function slideshowPrev() {
+            if (slideshowIndex > 0) {
+                slideshowIndex--;
+                updateSlideshowDisplay();
+            }
+        }
+
+        function slideshowNext() {
+            if (slideshowIndex < slideshowClips.length - 1) {
+                slideshowIndex++;
+                updateSlideshowDisplay();
+            }
+        }
+
+        function slideshowAutoAdvanceIfEnabled() {
+            const autoAdvance = document.getElementById('slideshowAutoAdvance').checked;
+            if (autoAdvance) {
+                // Remove the current clip from the array
+                slideshowClips.splice(slideshowIndex, 1);
+
+                // If we're at the end, stay at the last index
+                if (slideshowIndex >= slideshowClips.length) {
+                    slideshowIndex = Math.max(0, slideshowClips.length - 1);
+                }
+
+                updateSlideshowDisplay();
+            } else {
+                // Just remove the clip but stay at same position
+                slideshowClips.splice(slideshowIndex, 1);
+                if (slideshowIndex >= slideshowClips.length) {
+                    slideshowIndex = Math.max(0, slideshowClips.length - 1);
+                }
+                updateSlideshowDisplay();
+            }
+        }
+
+        async function slideshowApprove() {
+            if (slideshowClips.length === 0) return;
+
+            const clip = slideshowClips[slideshowIndex];
+            try {
+                const response = await fetch(`/api/review/${clip.id}/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Clip approved', 'success');
+                    slideshowAutoAdvanceIfEnabled();
+                } else {
+                    showToast('Failed to approve clip', 'error');
+                }
+            } catch (error) {
+                showToast('Error approving clip', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        async function slideshowReject() {
+            if (slideshowClips.length === 0) return;
+
+            const clip = slideshowClips[slideshowIndex];
+            try {
+                const response = await fetch(`/api/review/${clip.id}/reject`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Clip rejected', 'success');
+                    slideshowAutoAdvanceIfEnabled();
+                } else {
+                    showToast('Failed to reject clip', 'error');
+                }
+            } catch (error) {
+                showToast('Error rejecting clip', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        async function slideshowToggleFavorite() {
+            if (slideshowClips.length === 0) return;
+
+            const clip = slideshowClips[slideshowIndex];
+            const isFavorite = favorites.has(clip.filename);
+
+            try {
+                const response = await fetch(`/api/clips/${clip.filename}/favorite`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ favorite: !isFavorite })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const favBtn = document.getElementById('slideshowFavBtn');
+                    if (isFavorite) {
+                        favorites.delete(clip.filename);
+                        favBtn.classList.remove('active');
+                        showToast('Removed from favorites', 'info');
+                    } else {
+                        favorites.add(clip.filename);
+                        favBtn.classList.add('active');
+                        showToast('Added to favorites', 'success');
+                    }
+                } else {
+                    showToast('Failed to update favorite', 'error');
+                }
+            } catch (error) {
+                showToast('Error updating favorite', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        async function slideshowDelete() {
+            if (slideshowClips.length === 0) return;
+
+            const clip = slideshowClips[slideshowIndex];
+            if (!confirm(`Delete "${clip.filename}"? This cannot be undone.`)) return;
+
+            try {
+                const response = await fetch(`/api/clips/${clip.filename}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Clip deleted', 'success');
+                    slideshowAutoAdvanceIfEnabled();
+                } else {
+                    showToast('Failed to delete clip', 'error');
+                }
+            } catch (error) {
+                showToast('Error deleting clip', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        // ===== KEYBOARD SHORTCUTS (Enhanced) =====
+        document.addEventListener('keydown', function(e) {
+            // Escape key - close modal or slideshow
+            if (e.key === 'Escape') {
+                if (slideshowActive) {
+                    closeSlideshow();
+                } else {
+                    closeModal();
+                }
+                return;
+            }
+
+            // Only process other shortcuts if slideshow is active
+            if (!slideshowActive) return;
+
+            // Ignore if user is typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            switch (e.key) {
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    slideshowPrev();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    slideshowNext();
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    const video = document.getElementById('slideshowVideo');
+                    if (video.paused) {
+                        video.play();
+                    } else {
+                        video.pause();
+                    }
+                    break;
+                case 'a':
+                case 'A':
+                    e.preventDefault();
+                    slideshowApprove();
+                    break;
+                case 'r':
+                case 'R':
+                    e.preventDefault();
+                    slideshowReject();
+                    break;
+                case 'f':
+                case 'F':
+                    e.preventDefault();
+                    slideshowToggleFavorite();
+                    break;
+                case 'd':
+                case 'D':
+                    e.preventDefault();
+                    slideshowDelete();
+                    break;
+            }
+        });
+
+        // ===== CLIP EDITOR =====
+        let editorActive = false;
+        let editorFilename = null;
+        let editorDuration = 0;
+        let editorInPoint = 0;
+        let editorOutPoint = 0;
+        let currentTrimJobId = null;
+        let isPreviewMode = false;
+
+        function openEditor(filename) {
+            editorFilename = filename;
+            editorActive = true;
+
+            const editor = document.getElementById('clipEditor');
+            const video = document.getElementById('editorVideo');
+            const filenameEl = document.getElementById('editorFilename');
+
+            // Set filename display
+            filenameEl.textContent = filename;
+
+            // Load video
+            video.src = '/clips/' + filename;
+
+            // Reset state
+            editorInPoint = 0;
+            editorOutPoint = 0;
+            editorDuration = 0;
+            isPreviewMode = false;
+            currentTrimJobId = null;
+
+            // Show editor
+            editor.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Get video metadata
+            fetchClipMetadata(filename);
+
+            // Set up video event listeners
+            video.onloadedmetadata = function() {
+                editorDuration = video.duration;
+                editorOutPoint = editorDuration;
+                updateEditorUI();
+            };
+
+            video.ontimeupdate = function() {
+                updatePlayhead();
+
+                // If in preview mode and past out point, loop back to in point
+                if (isPreviewMode && video.currentTime >= editorOutPoint) {
+                    video.currentTime = editorInPoint;
+                }
+            };
+        }
+
+        function closeEditor() {
+            editorActive = false;
+            const editor = document.getElementById('clipEditor');
+            const video = document.getElementById('editorVideo');
+
+            video.pause();
+            video.src = '';
+
+            editor.classList.remove('active');
+            document.body.style.overflow = '';
+
+            // Reset progress
+            document.getElementById('editorProgress').classList.remove('active');
+        }
+
+        async function fetchClipMetadata(filename) {
+            try {
+                const response = await fetch(`/api/clips/${encodeURIComponent(filename)}/metadata`);
+                const data = await response.json();
+
+                if (data.success && data.metadata.duration) {
+                    editorDuration = data.metadata.duration;
+                    editorOutPoint = editorDuration;
+                    updateEditorUI();
+                }
+            } catch (error) {
+                console.error('Error fetching metadata:', error);
+            }
+        }
+
+        function updateEditorUI() {
+            // Update inputs
+            document.getElementById('inPointInput').value = formatTimeDisplay(editorInPoint);
+            document.getElementById('outPointInput').value = formatTimeDisplay(editorOutPoint);
+
+            // Update timeline total
+            document.getElementById('timelineTotal').textContent = formatTimeDisplay(editorDuration);
+
+            // Update markers
+            const inPercent = (editorInPoint / editorDuration) * 100;
+            const outPercent = (editorOutPoint / editorDuration) * 100;
+
+            document.getElementById('timelineInMarker').style.left = inPercent + '%';
+            document.getElementById('timelineOutMarker').style.left = outPercent + '%';
+
+            // Update trim region
+            const trimRegion = document.getElementById('timelineTrimRegion');
+            trimRegion.style.left = inPercent + '%';
+            trimRegion.style.width = (outPercent - inPercent) + '%';
+
+            // Update duration display
+            const duration = editorOutPoint - editorInPoint;
+            document.getElementById('trimDuration').textContent = duration.toFixed(1) + 's';
+        }
+
+        function updatePlayhead() {
+            const video = document.getElementById('editorVideo');
+            const currentTime = video.currentTime;
+            const percent = (currentTime / editorDuration) * 100;
+
+            document.getElementById('timelinePlayhead').style.left = percent + '%';
+            document.getElementById('timelineCurrent').textContent = formatTimeDisplay(currentTime);
+
+            // Update progress bar
+            document.getElementById('timelineProgress').style.width = percent + '%';
+        }
+
+        function formatTimeDisplay(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toFixed(1).padStart(4, '0')}`;
+        }
+
+        function parseTimeDisplay(timeStr) {
+            const parts = timeStr.split(':');
+            if (parts.length === 2) {
+                return parseInt(parts[0]) * 60 + parseFloat(parts[1]);
+            }
+            return parseFloat(timeStr) || 0;
+        }
+
+        function seekToPosition(event) {
+            const bar = document.getElementById('timelineBar');
+            const rect = bar.getBoundingClientRect();
+            const percent = (event.clientX - rect.left) / rect.width;
+            const time = percent * editorDuration;
+
+            const video = document.getElementById('editorVideo');
+            video.currentTime = Math.max(0, Math.min(time, editorDuration));
+        }
+
+        function setInPoint() {
+            const video = document.getElementById('editorVideo');
+            editorInPoint = video.currentTime;
+
+            // Ensure in point is before out point
+            if (editorInPoint >= editorOutPoint) {
+                editorOutPoint = Math.min(editorInPoint + 1, editorDuration);
+            }
+
+            updateEditorUI();
+            showToast('In point set at ' + formatTimeDisplay(editorInPoint), 'info');
+        }
+
+        function setOutPoint() {
+            const video = document.getElementById('editorVideo');
+            editorOutPoint = video.currentTime;
+
+            // Ensure out point is after in point
+            if (editorOutPoint <= editorInPoint) {
+                editorInPoint = Math.max(editorOutPoint - 1, 0);
+            }
+
+            updateEditorUI();
+            showToast('Out point set at ' + formatTimeDisplay(editorOutPoint), 'info');
+        }
+
+        function updateInPoint(value) {
+            const newTime = parseTimeDisplay(value);
+            if (newTime >= 0 && newTime < editorOutPoint) {
+                editorInPoint = newTime;
+                updateEditorUI();
+            } else {
+                // Reset to current value
+                document.getElementById('inPointInput').value = formatTimeDisplay(editorInPoint);
+            }
+        }
+
+        function updateOutPoint(value) {
+            const newTime = parseTimeDisplay(value);
+            if (newTime > editorInPoint && newTime <= editorDuration) {
+                editorOutPoint = newTime;
+                updateEditorUI();
+            } else {
+                // Reset to current value
+                document.getElementById('outPointInput').value = formatTimeDisplay(editorOutPoint);
+            }
+        }
+
+        function previewTrim() {
+            const video = document.getElementById('editorVideo');
+
+            if (isPreviewMode) {
+                // Stop preview mode
+                isPreviewMode = false;
+                video.pause();
+                showToast('Preview stopped', 'info');
+            } else {
+                // Start preview mode
+                isPreviewMode = true;
+                video.currentTime = editorInPoint;
+                video.play();
+                showToast('Playing trimmed segment...', 'info');
+            }
+        }
+
+        function resetTrim() {
+            editorInPoint = 0;
+            editorOutPoint = editorDuration;
+            isPreviewMode = false;
+            updateEditorUI();
+            showToast('Trim points reset', 'info');
+        }
+
+        async function exportTrimmedClip() {
+            if (editorOutPoint <= editorInPoint) {
+                showToast('Invalid trim points', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('exportTrimBtn');
+            btn.disabled = true;
+
+            const progress = document.getElementById('editorProgress');
+            progress.classList.add('active');
+            updateEditorProgress(0, 'Starting trim operation...');
+
+            try {
+                const response = await fetch('/api/clips/trim', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filename: editorFilename,
+                        start_time: editorInPoint,
+                        end_time: editorOutPoint
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentTrimJobId = data.job_id;
+                    pollTrimProgress(data.job_id);
+                } else {
+                    showToast(data.error || 'Failed to start trim', 'error');
+                    btn.disabled = false;
+                    progress.classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Error starting trim:', error);
+                showToast('Error starting trim operation', 'error');
+                btn.disabled = false;
+                progress.classList.remove('active');
+            }
+        }
+
+        async function pollTrimProgress(jobId) {
+            try {
+                const response = await fetch(`/api/clips/trim/status/${jobId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    updateEditorProgress(data.progress, data.message);
+
+                    if (data.status === 'completed') {
+                        showToast('Clip trimmed successfully!', 'success');
+                        document.getElementById('exportTrimBtn').disabled = false;
+
+                        // Show success message with new filename
+                        if (data.clip) {
+                            updateEditorProgress(100, `Created: ${data.clip.filename} (${data.clip.duration?.toFixed(1)}s)`);
+                        }
+
+                        // Keep progress visible then close editor
+                        setTimeout(() => {
+                            closeEditor();
+                            // Reload page to show new clip
+                            location.reload();
+                        }, 2000);
+                    } else if (data.status === 'failed') {
+                        showToast('Trim failed: ' + data.message, 'error');
+                        document.getElementById('exportTrimBtn').disabled = false;
+                        document.getElementById('editorProgress').classList.remove('active');
+                    } else {
+                        // Still processing
+                        setTimeout(() => pollTrimProgress(jobId), 500);
+                    }
+                }
+            } catch (error) {
+                console.error('Error polling trim status:', error);
+            }
+        }
+
+        function updateEditorProgress(percent, message) {
+            document.getElementById('editorProgressFill').style.width = percent + '%';
+            document.getElementById('editorProgressText').textContent = message;
+        }
+
+        // Add Edit button to clip cards
+        function addEditButtons() {
+            // Add to clips grid
+            document.querySelectorAll('#clipsGrid .clip-card').forEach(card => {
+                const filename = card.dataset.filename;
+                const actions = card.querySelector('.clip-actions');
+                if (actions && !actions.querySelector('.clip-action-btn.edit')) {
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'clip-action-btn edit';
+                    editBtn.innerHTML = '&#9998; Edit';
+                    editBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        openEditor(filename);
+                    };
+                    // Insert before delete button
+                    const deleteBtn = actions.querySelector('.clip-action-btn.delete');
+                    if (deleteBtn) {
+                        actions.insertBefore(editBtn, deleteBtn);
+                    } else {
+                        actions.appendChild(editBtn);
+                    }
+                }
+            });
+        }
+
+        // Add Edit button to slideshow
+        function addSlideshowEditButton() {
+            const slideshowActions = document.querySelector('.slideshow-actions');
+            if (slideshowActions && !slideshowActions.querySelector('.slideshow-action-btn.edit')) {
+                const editBtn = document.createElement('button');
+                editBtn.className = 'slideshow-action-btn edit';
+                editBtn.style.cssText = 'background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border);';
+                editBtn.innerHTML = '<span class="kbd">E</span> Edit';
+                editBtn.onclick = function() {
+                    if (slideshowClips.length > 0) {
+                        const clip = slideshowClips[slideshowIndex];
+                        closeSlideshow();
+                        openEditor(clip.filename);
+                    }
+                };
+                // Insert before delete button
+                const deleteBtn = slideshowActions.querySelector('.slideshow-action-btn.delete');
+                if (deleteBtn) {
+                    slideshowActions.insertBefore(editBtn, deleteBtn);
+                }
+            }
+        }
+
+        // Enhanced keyboard handler for editor
+        const originalKeydownHandler = document.onkeydown;
+        document.addEventListener('keydown', function(e) {
+            // Handle editor keyboard shortcuts
+            if (editorActive) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeEditor();
+                    return;
+                }
+
+                // Ignore if typing in input
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                const video = document.getElementById('editorVideo');
+
+                switch(e.key) {
+                    case ' ':
+                        e.preventDefault();
+                        if (video.paused) {
+                            video.play();
+                        } else {
+                            video.pause();
+                        }
+                        break;
+                    case 'i':
+                    case 'I':
+                        e.preventDefault();
+                        setInPoint();
+                        break;
+                    case 'o':
+                    case 'O':
+                        e.preventDefault();
+                        setOutPoint();
+                        break;
+                    case 'p':
+                    case 'P':
+                        e.preventDefault();
+                        previewTrim();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        video.currentTime = Math.max(0, video.currentTime - 1);
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        video.currentTime = Math.min(editorDuration, video.currentTime + 1);
+                        break;
+                }
+            }
+
+            // Handle 'E' for edit in slideshow
+            if (slideshowActive && !editorActive) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                if (e.key === 'e' || e.key === 'E') {
+                    e.preventDefault();
+                    if (slideshowClips.length > 0) {
+                        const clip = slideshowClips[slideshowIndex];
+                        closeSlideshow();
+                        openEditor(clip.filename);
+                    }
+                }
+            }
+        });
+
+        // Initialize edit buttons when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            addEditButtons();
+            addSlideshowEditButton();
+        });
+
+        // Also run immediately in case DOM is already ready
+        addEditButtons();
+        addSlideshowEditButton();
     </script>
 </body>
 </html>
