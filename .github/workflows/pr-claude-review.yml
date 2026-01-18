@@ -1,0 +1,85 @@
+# Claude Code PR Review
+# Automatically reviews PRs and responds to @claude mentions
+# 
+# Setup:
+# 1. Add ANTHROPIC_API_KEY to repository secrets
+# 2. Install Claude GitHub App: https://github.com/apps/claude
+#    OR create your own GitHub App with PR/Issue permissions
+#
+# Usage:
+# - Opens automatically on PR creation
+# - Comment "@claude review this" for on-demand review
+# - Comment "@claude fix the linting issues" for implementation
+
+name: PR - Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  review:
+    # Run on PR events OR when someone mentions @claude in a PR comment
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       contains(github.event.comment.body, '@claude'))
+    
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better diff analysis
+      
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: "claude-sonnet-4-20250514"
+          timeout_minutes: 10
+          
+          # On PR open/sync, do a full review
+          # On @claude mention, respond to the specific request
+          prompt: |
+            You are reviewing a pull request.
+            
+            First, run `git diff origin/${{ github.base_ref }}...HEAD` to see the changes.
+            
+            Review the code for:
+            1. 🐛 Bugs - Logic errors, edge cases, null checks
+            2. 🔒 Security - Injection, auth, secrets exposure
+            3. ⚡ Performance - N+1 queries, unnecessary work
+            4. 📖 Readability - Naming, complexity, comments
+            5. 🧪 Tests - Coverage gaps, test quality
+            
+            Format your review as:
+            
+            ## Summary
+            [One paragraph overview]
+            
+            ## Issues Found
+            [List with severity: 🔴 Critical, 🟡 Warning, 🔵 Suggestion]
+            
+            ## Recommendations
+            [Actionable next steps]
+
+      - name: Comment on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ Claude Code review failed. Check the [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.'
+            })

@@ -1,0 +1,104 @@
+# Claude Code Dependency Audit
+# Runs biweekly to keep dependencies updated and secure
+#
+# Setup:
+# 1. Add ANTHROPIC_API_KEY to repository secrets
+# 2. Adjust schedule as needed (default: 1st and 15th at 3am UTC)
+
+name: Scheduled - Dependency Audit
+
+on:
+  schedule:
+    # Run at 3:00 AM UTC on the 1st and 15th of each month
+    - cron: '0 3 1,15 * *'
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      update_type:
+        description: 'Type of updates to apply'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - security-only
+
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Run Claude Dependency Audit
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: "claude-sonnet-4-20250514"
+          timeout_minutes: 30
+          
+          prompt: |
+            You are performing a dependency audit and update.
+            
+            Update type: ${{ github.event.inputs.update_type || 'patch' }}
+            
+            ## Step 1: Audit Current State
+            
+            ### For Node.js projects:
+            ```bash
+            npm audit 2>&1 | head -100
+            npm outdated 2>&1 | head -50
+            ```
+            
+            ### For Python projects:
+            ```bash
+            pip list --outdated 2>&1 | head -50
+            pip-audit 2>&1 || true
+            ```
+            
+            ## Step 2: Identify Safe Updates
+            
+            Based on update type "${{ github.event.inputs.update_type || 'patch' }}":
+            - **patch**: Only x.x.PATCH updates (safest)
+            - **minor**: x.MINOR.x updates (usually safe)
+            - **major**: MAJOR.x.x updates (review breaking changes)
+            - **security-only**: Only updates that fix vulnerabilities
+            
+            ## Step 3: Apply Updates
+            
+            1. Create a new branch: `deps/audit-$(date +%Y%m%d)`
+            2. Apply safe updates one category at a time
+            3. Run tests after each update: `npm test` or `pytest`
+            4. If tests fail, revert that update and note it
+            
+            ## Step 4: Create PR
+            
+            If updates were successful:
+            ```bash
+            git checkout -b deps/audit-$(date +%Y%m%d)
+            git add package.json package-lock.json  # or requirements.txt
+            git commit -m "deps: biweekly dependency update"
+            git push origin HEAD
+            gh pr create --title "deps: biweekly dependency update" --body "## Dependency Updates\n\n[List changes here]"
+            ```
+            
+            ## Output
+            
+            Provide a summary:
+            - 🔒 Security vulnerabilities found/fixed
+            - 📦 Packages updated (with version changes)
+            - ⚠️ Updates skipped (and why)
+            - 🧪 Test results

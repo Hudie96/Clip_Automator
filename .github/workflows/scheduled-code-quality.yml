@@ -1,0 +1,90 @@
+# Claude Code Quality Review
+# Runs weekly to catch quality issues before they accumulate
+#
+# Setup:
+# 1. Add ANTHROPIC_API_KEY to repository secrets
+# 2. Adjust schedule as needed (default: Sundays at 2am UTC)
+
+name: Scheduled - Code Quality
+
+on:
+  schedule:
+    # Run at 2:00 AM UTC every Sunday
+    - cron: '0 2 * * 0'
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      target_directory:
+        description: 'Directory to review (leave empty for random selection)'
+        required: false
+        default: ''
+
+jobs:
+  quality-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci || npm install || true
+      
+      - name: Run Claude Quality Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: "claude-sonnet-4-20250514"
+          timeout_minutes: 45
+          
+          prompt: |
+            You are performing a weekly code quality review.
+            
+            ## Target
+            ${{ github.event.inputs.target_directory && format('Review directory: {0}', github.event.inputs.target_directory) || 'Select a random source directory to review (prefer src/, lib/, or app/)' }}
+            
+            ## Review Checklist
+            
+            ### 1. Static Analysis
+            - Run linter: `npm run lint 2>&1 | head -50` or equivalent
+            - Check for TypeScript errors: `npx tsc --noEmit 2>&1 | head -50`
+            
+            ### 2. Code Smells
+            - Functions over 50 lines
+            - Files over 300 lines
+            - Deeply nested code (>3 levels)
+            - Duplicate code patterns
+            - TODO/FIXME/HACK comments older than 30 days
+            
+            ### 3. Security Scan
+            - Hardcoded secrets or API keys
+            - SQL injection vulnerabilities
+            - XSS vulnerabilities
+            - Insecure dependencies
+            
+            ### 4. Test Coverage
+            - Files without corresponding test files
+            - Complex functions without tests
+            
+            ## Actions
+            1. Fix any auto-fixable issues (lint --fix, prettier)
+            2. Create GitHub issues for manual fixes needed
+            3. If fixes were made, create a PR
+            
+            ## Output
+            Provide a summary report with:
+            - 📊 Overall health score (A-F)
+            - 🔴 Critical issues (must fix)
+            - 🟡 Warnings (should fix)
+            - 🔵 Suggestions (nice to fix)
+            - ✅ What's working well

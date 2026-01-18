@@ -1,0 +1,20 @@
+# Clip Automater Dependencies
+
+# Core
+requests>=2.28.0
+cloudscraper>=1.2.71      # Bypass Cloudflare protection
+websocket-client>=1.2.1   # For chat monitoring
+
+# Web Dashboard
+flask>=2.0.0              # Dashboard web server
+flask-socketio>=5.0.0     # WebSocket support for real-time stats
+
+# Stream recording (install separately via pip install streamlink)
+# streamlink
+
+# FFmpeg must be installed system-wide and in PATH
+# Download from: https://ffmpeg.org/download.html
+
+# Social Media Upload
+google-api-python-client>=2.0.0   # YouTube API
+google-auth-oauthlib>=0.4.0       # YouTube OAuth2

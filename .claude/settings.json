@@ -1,0 +1,154 @@
+{
+  "$schema": "https://code.claude.com/schemas/settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"$(git branch --show-current 2>/dev/null)\" != \"main\" ] && [ \"$(git branch --show-current 2>/dev/null)\" != \"master\" ] || { echo '{\"block\": true, \"message\": \"🚫 Cannot edit on main/master. Create a feature branch first.\"}' >&2; exit 2; }",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "case \"$CLAUDE_TOOL_INPUT_COMMAND\" in *'rm -rf /'*|*'rm -rf ~'*|*'sudo rm'*|*'chmod 777'*|*'> /dev'*) echo '{\"block\": true, \"message\": \"🚫 Dangerous command blocked\"}' >&2; exit 2 ;; esac",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "filepath=\"$CLAUDE_TOOL_INPUT_FILE_PATH\"; case \"$filepath\" in *.js|*.jsx|*.ts|*.tsx|*.json|*.css|*.scss|*.md) npx prettier --write \"$filepath\" 2>/dev/null || true ;; *.py) black \"$filepath\" 2>/dev/null || ruff format \"$filepath\" 2>/dev/null || true ;; *.go) gofmt -w \"$filepath\" 2>/dev/null || true ;; *.rs) rustfmt \"$filepath\" 2>/dev/null || true ;; esac; exit 0",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "filepath=\"$CLAUDE_TOOL_INPUT_FILE_PATH\"; case \"$filepath\" in *.test.*|*.spec.*|*_test.*) echo '{\"feedback\": \"🧪 Test file modified. Run tests to verify.\"}' ;; esac; exit 0",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "filepath=\"$CLAUDE_TOOL_INPUT_FILE_PATH\"; case \"$filepath\" in *.ts|*.tsx) npx tsc --noEmit \"$filepath\" 2>&1 | head -5 | while read line; do echo \"{\\\"feedback\\\": \\\"⚠️ TypeScript: $line\\\"}\"; done || true ;; esac; exit 0",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "filepath=\"$CLAUDE_TOOL_INPUT_FILE_PATH\"; case \"$filepath\" in *.js|*.jsx|*.ts|*.tsx) npx eslint \"$filepath\" --format compact 2>&1 | head -3 | while read line; do [ -n \"$line\" ] && echo \"{\\\"feedback\\\": \\\"🔍 Lint: $line\\\"}\"; done || true ;; esac; exit 0",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "branch=$(git branch --show-current 2>/dev/null || echo 'none'); echo \"{\\\"feedback\\\": \\\"📂 $(basename $PWD) | 🌿 $branch | Type /help for commands\\\"}\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "exit 0",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(yarn *)",
+      "Bash(pnpm *)",
+      "Bash(bun *)",
+      "Bash(node *)",
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Bash(pip *)",
+      "Bash(pip3 *)",
+      "Bash(pytest *)",
+      "Bash(cargo *)",
+      "Bash(go *)",
+      "Bash(make *)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(find *)",
+      "Bash(which *)",
+      "Bash(echo *)",
+      "Bash(curl *)",
+      "Bash(jq *)",
+      "Bash(mkdir *)",
+      "Bash(touch *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(streamlink *)",
+      "Bash(ffmpeg *)",
+      "Bash(ffprobe *)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(sudo *)",
+      "Bash(chmod 777 *)",
+      "Bash(> /dev/*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/.env)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/secrets/**)",
+      "Read(**/*secret*)",
+      "Read(**/*password*)",
+      "Read(~/.ssh/*)",
+      "Read(~/.aws/*)",
+      "Read(~/.config/gh/*)",
+      "Write(.env*)",
+      "Write(**/secrets/**)"
+    ]
+  },
+  "env": {
+    "EDITOR": "code --wait"
+  }
+}

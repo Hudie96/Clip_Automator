@@ -1,0 +1,128 @@
+# ============================================
+# .claudeignore — Files Claude Should Skip
+# ============================================
+# This saves tokens (money) and speeds up responses.
+# Claude won't read anything listed here.
+#
+# Customize this for your project!
+# Run "Apply the brainstorm skill" to auto-generate.
+# ============================================
+
+# -----------------
+# Dependencies
+# -----------------
+node_modules/
+vendor/
+.venv/
+venv/
+env/
+__pycache__/
+
+# -----------------
+# Build Outputs
+# -----------------
+dist/
+build/
+.next/
+.nuxt/
+out/
+target/
+bin/
+*.egg-info/
+
+# -----------------
+# Lock Files
+# -----------------
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+poetry.lock
+Pipfile.lock
+Cargo.lock
+
+# -----------------
+# Cache
+# -----------------
+.cache/
+.parcel-cache/
+.turbo/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# -----------------
+# Test Coverage
+# -----------------
+coverage/
+.nyc_output/
+htmlcov/
+.coverage
+
+# -----------------
+# Generated Files
+# -----------------
+*.min.js
+*.min.css
+*.map
+*.bundle.js
+
+# -----------------
+# Git
+# -----------------
+.git/
+
+# -----------------
+# IDE & OS
+# -----------------
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# -----------------
+# Environment
+# -----------------
+.env
+.env.*
+.env.local
+.env.production
+
+# -----------------
+# Logs
+# -----------------
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# -----------------
+# Large Media Files
+# -----------------
+*.mp4
+*.mkv
+*.ts
+*.avi
+*.mov
+*.webm
+*.m3u8
+*.mp3
+*.wav
+*.flac
+
+# -----------------
+# Project-Specific: Clip Automater
+# -----------------
+# Output folders (recordings and clips)
+recordings/
+clips/
+output/
+temp/
+
+# Large downloaded files
+*.zip
+*.tar.gz
+*.rar

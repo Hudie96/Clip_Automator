@@ -1,0 +1,29 @@
+{
+  "youtube": {
+    "enabled": false,
+    "credentials_file": "config/youtube_credentials.json",
+    "default_privacy": "unlisted",
+    "_setup_instructions": [
+      "1. Go to Google Cloud Console: https://console.cloud.google.com/",
+      "2. Create a new project or select existing",
+      "3. Enable YouTube Data API v3",
+      "4. Go to Credentials > Create Credentials > OAuth 2.0 Client IDs",
+      "5. Select 'Desktop app' as application type",
+      "6. Download the JSON file and save as config/youtube_credentials.json",
+      "7. Set 'enabled' to true in this file",
+      "8. Run the uploader - it will open a browser for OAuth authorization"
+    ]
+  },
+  "tiktok": {
+    "enabled": false,
+    "note": "TikTok upload requires manual setup - API access is limited",
+    "_setup_instructions": [
+      "TikTok's Content Posting API has limited availability.",
+      "See: https://developers.tiktok.com/doc/content-posting-api-get-started",
+      "Current workaround: Clips are saved to clips/ for manual upload"
+    ]
+  },
+  "auto_upload": false,
+  "default_description": "Clipped by Clip Automater",
+  "default_tags": ["gaming", "clips", "highlights"]
+}

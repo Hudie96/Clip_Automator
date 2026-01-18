@@ -1,0 +1,68 @@
+# Claude Code Documentation Sync
+# Runs monthly to ensure docs stay aligned with code changes
+#
+# Setup:
+# 1. Add ANTHROPIC_API_KEY to repository secrets
+# 2. Adjust schedule as needed (default: 1st of each month at 9am UTC)
+
+name: Scheduled - Docs Sync
+
+on:
+  schedule:
+    # Run at 9:00 AM UTC on the 1st of each month
+    - cron: '0 9 1 * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  docs-sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Run Claude Docs Sync
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: "claude-sonnet-4-20250514"
+          timeout_minutes: 30
+          
+          prompt: |
+            You are synchronizing documentation with recent code changes.
+            
+            ## Task
+            1. Run `git log --oneline --since="1 month ago"` to see recent commits
+            2. Identify commits that might require documentation updates
+            3. Check if README.md, docs/, and inline comments are still accurate
+            4. Update any outdated documentation
+            
+            ## Focus Areas
+            - API changes (new endpoints, changed parameters)
+            - New features or removed features
+            - Changed configuration options
+            - Updated dependencies with breaking changes
+            - New environment variables
+            
+            ## Process
+            1. Analyze recent commits
+            2. Cross-reference with existing docs
+            3. Make necessary updates
+            4. Create a summary of changes
+            
+            If you make changes, create a new branch and commit them:
+            ```bash
+            git checkout -b docs/monthly-sync-$(date +%Y%m)
+            git add -A
+            git commit -m "docs: monthly documentation sync"
+            git push origin HEAD
+            ```
+            
+            Then use `gh pr create` to open a PR.
+            
+            If no updates are needed, report that documentation is up to date.

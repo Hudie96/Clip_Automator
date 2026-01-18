@@ -1,0 +1,158 @@
+{
+  "testing-patterns": {
+    "description": "Unit testing patterns, mocking, and TDD workflow",
+    "priority": 9,
+    "triggers": {
+      "keywords": ["test", "jest", "spec", "tdd", "mock", "stub", "fixture", "coverage", "pytest", "vitest"],
+      "keywordPatterns": ["\\btest(?:s|ing)?\\b", "\\bspec\\b", "\\bmock(?:s|ing)?\\b"],
+      "pathPatterns": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.test.js", "**/__tests__/**"],
+      "intentPatterns": [
+        "(?:write|add|create|fix|update).*(?:test|spec)",
+        "(?:test|spec).*(?:for|of|the)",
+        "how.*test"
+      ]
+    },
+    "excludePatterns": ["e2e", "playwright", "cypress", "end-to-end"]
+  },
+  
+  "debug-detective": {
+    "description": "Systematic debugging methodology for tricky bugs",
+    "priority": 9,
+    "triggers": {
+      "keywords": ["debug", "bug", "broken", "error", "exception", "crash", "issue", "wrong", "failing"],
+      "keywordPatterns": ["\\bbug(?:s)?\\b", "\\bdebug(?:ging)?\\b", "not\\s+work"],
+      "intentPatterns": [
+        "(?:fix|debug|investigate|find).*(?:bug|issue|error|problem)",
+        "why.*(?:not|broken|failing|error)",
+        "(?:doesn't|does not|isn't|is not).*work"
+      ]
+    }
+  },
+  
+  "code-teacher": {
+    "description": "Teaching mode for explaining concepts with examples",
+    "priority": 7,
+    "triggers": {
+      "keywords": ["explain", "understand", "learn", "how does", "what is", "teach", "tutorial"],
+      "keywordPatterns": ["\\bexplain\\b", "how\\s+does", "what\\s+is", "what\\s+are"],
+      "intentPatterns": [
+        "(?:explain|teach|help.*understand).*(?:how|what|why)",
+        "(?:can you|please).*explain",
+        "what.*mean"
+      ]
+    }
+  },
+  
+  "decision-helper": {
+    "description": "Help making technical decisions with trade-off analysis",
+    "priority": 8,
+    "triggers": {
+      "keywords": ["choose", "decision", "should i", "vs", "versus", "compare", "which", "better", "trade-off", "pros cons"],
+      "keywordPatterns": ["should\\s+(?:i|we)", "(?:which|what).*(?:better|best)", "\\bvs\\b"],
+      "intentPatterns": [
+        "(?:should|would).*(?:use|choose|pick|go with)",
+        "(?:compare|difference).*(?:between|vs)",
+        "(?:pros|cons|trade-?off)"
+      ]
+    }
+  },
+  
+  "research": {
+    "description": "Deep research with sources and evidence",
+    "priority": 7,
+    "triggers": {
+      "keywords": ["research", "investigate", "find out", "look into", "explore", "analyze", "study"],
+      "keywordPatterns": ["\\bresearch\\b", "\\binvestigate\\b"],
+      "intentPatterns": [
+        "(?:research|investigate|look into|explore).*(?:options|approaches|solutions)",
+        "(?:find|gather).*(?:information|data|evidence)"
+      ]
+    }
+  },
+  
+  "api-design": {
+    "description": "REST and GraphQL API design patterns",
+    "priority": 8,
+    "triggers": {
+      "keywords": ["api", "endpoint", "rest", "graphql", "query", "mutation", "route", "handler"],
+      "keywordPatterns": ["\\bapi\\b", "\\bendpoint(?:s)?\\b", "\\brest(?:ful)?\\b", "\\bgraphql\\b"],
+      "pathPatterns": ["**/api/**", "**/routes/**", "**/graphql/**", "**/*.resolver.ts", "**/handlers/**"],
+      "intentPatterns": [
+        "(?:create|add|build|design).*(?:api|endpoint|route)",
+        "(?:api|endpoint).*(?:for|to)"
+      ]
+    }
+  },
+  
+  "database-patterns": {
+    "description": "Database design, queries, and migrations",
+    "priority": 8,
+    "triggers": {
+      "keywords": ["database", "db", "sql", "query", "schema", "migration", "model", "table", "prisma", "drizzle"],
+      "keywordPatterns": ["\\bsql\\b", "\\bdatabase\\b", "\\bschema\\b", "\\bmigration(?:s)?\\b"],
+      "pathPatterns": ["**/models/**", "**/migrations/**", "**/schema/**", "**/*.prisma", "**/db/**"],
+      "intentPatterns": [
+        "(?:create|add|update|modify).*(?:table|schema|model|migration)",
+        "(?:query|select|insert|update|delete).*(?:from|into)"
+      ]
+    }
+  },
+  
+  "react-patterns": {
+    "description": "React component patterns, hooks, and state management",
+    "priority": 8,
+    "triggers": {
+      "keywords": ["react", "component", "hook", "useState", "useEffect", "props", "state", "jsx", "tsx"],
+      "keywordPatterns": ["\\breact\\b", "\\bcomponent(?:s)?\\b", "\\bhook(?:s)?\\b", "\\buse[A-Z]\\w+"],
+      "pathPatterns": ["**/components/**", "**/*.tsx", "**/*.jsx", "**/hooks/**"],
+      "intentPatterns": [
+        "(?:create|add|build).*(?:component|hook)",
+        "(?:component|hook).*(?:for|to|that)"
+      ]
+    },
+    "excludePatterns": ["vue", "angular", "svelte"]
+  },
+  
+  "security-patterns": {
+    "description": "Security best practices and vulnerability prevention",
+    "priority": 9,
+    "triggers": {
+      "keywords": ["security", "auth", "authentication", "authorization", "permission", "csrf", "xss", "injection", "vulnerability", "secure"],
+      "keywordPatterns": ["\\bsecurity\\b", "\\bauth(?:entication|orization)?\\b", "\\bvulnerab"],
+      "intentPatterns": [
+        "(?:check|review|audit).*(?:security|vulnerabilit)",
+        "(?:secure|protect).*(?:against|from)",
+        "(?:add|implement).*(?:auth|security)"
+      ]
+    }
+  },
+  
+  "performance-patterns": {
+    "description": "Performance optimization and profiling",
+    "priority": 7,
+    "triggers": {
+      "keywords": ["performance", "optimize", "slow", "fast", "speed", "cache", "lazy", "memo", "profil"],
+      "keywordPatterns": ["\\bperformance\\b", "\\boptimiz", "\\bslow\\b", "\\bcach"],
+      "intentPatterns": [
+        "(?:improve|optimize|speed up).*(?:performance|loading)",
+        "(?:why|make).*(?:slow|fast)",
+        "(?:add|implement).*(?:cache|caching)"
+      ]
+    }
+  },
+  
+  "form-patterns": {
+    "description": "Form handling, validation, and state management",
+    "priority": 7,
+    "triggers": {
+      "keywords": ["form", "input", "validation", "submit", "formik", "react-hook-form", "zod", "yup"],
+      "keywordPatterns": ["\\bform(?:s)?\\b", "\\bvalidat", "\\binput(?:s)?\\b"],
+      "pathPatterns": ["**/forms/**", "**/*Form.tsx", "**/*Form.jsx"],
+      "intentPatterns": [
+        "(?:create|add|build).*(?:form|input|validation)",
+        "(?:form|input).*(?:for|to|that)",
+        "(?:validate|validation).*(?:for|of)"
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+# Local settings (personal, not shared)
+settings.local.json
+
+# Log files
+*.log
+command-log.txt
+
+# Temporary files
+*.tmp
+*.temp
+SCRATCHPAD.md
+
+# OS files
+.DS_Store
+Thumbs.db
