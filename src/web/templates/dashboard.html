@@ -410,6 +410,168 @@
             }
         }
 
+        /* ===== REVIEW PANEL ===== */
+        .pending-badge {
+            background: var(--warning);
+            color: white;
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 4px;
+        }
+
+        .review-panel {
+            padding: 20px;
+        }
+
+        .review-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .review-header h3 {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .review-actions-bar {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-approve-all, .btn-reject-all {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-approve-all {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-approve-all:hover {
+            background: #00e6b8;
+        }
+
+        .btn-reject-all {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-reject-all:hover {
+            background: var(--danger-hover);
+        }
+
+        .review-stats {
+            display: flex;
+            gap: 24px;
+            padding: 12px 16px;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9em;
+        }
+
+        .stat-pending strong { color: var(--warning); }
+        .stat-approved strong { color: var(--success); }
+        .stat-rejected strong { color: var(--danger); }
+
+        .review-queue {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .review-card {
+            background: var(--bg-elevated);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .review-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .review-card video {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            background: var(--bg-primary);
+            cursor: pointer;
+        }
+
+        .review-card-info {
+            padding: 12px;
+        }
+
+        .review-card-trigger {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: var(--accent-primary);
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .review-card-meta {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .review-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .review-card-actions button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-approve {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-reject {
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-reject:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+
         /* ===== CLIPS SIDEBAR ===== */
         .clips-sidebar-header {
             padding: 14px 16px;
@@ -1156,6 +1318,26 @@
             <div class="tab-bar">
                 <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-btn" onclick="switchTab('clips')">All Clips</button>
+                <button class="tab-btn" onclick="switchTab('review')">Review <span id="pendingCount" class="pending-badge" style="display:none;">0</span></button>
+            </div>
+
+            <!-- Review Panel (hidden by default) -->
+            <div id="reviewView" style="display: none;" class="review-panel">
+                <div class="review-header">
+                    <h3>Pending Review</h3>
+                    <div class="review-actions-bar">
+                        <button class="btn-approve-all" onclick="bulkAction('approve')">Approve All</button>
+                        <button class="btn-reject-all" onclick="bulkAction('reject')">Reject All</button>
+                    </div>
+                </div>
+                <div class="review-stats" id="reviewStats">
+                    <span class="stat-pending">Pending: <strong>0</strong></span>
+                    <span class="stat-approved">Approved: <strong>0</strong></span>
+                    <span class="stat-rejected">Rejected: <strong>0</strong></span>
+                </div>
+                <div class="review-queue" id="reviewQueue">
+                    <div class="loading-message">Loading clips for review...</div>
+                </div>
             </div>
         </div>
 
@@ -1226,15 +1408,207 @@
             // Show/hide views
             const dashboardView = document.getElementById('dashboardView');
             const clipsView = document.getElementById('fullClipsView');
+            const reviewView = document.getElementById('reviewView');
+
+            // Hide all views
+            dashboardView.classList.add('hidden');
+            clipsView.classList.remove('active');
+            if (reviewView) reviewView.style.display = 'none';
 
             if (tab === 'dashboard') {
                 dashboardView.classList.remove('hidden');
-                clipsView.classList.remove('active');
-            } else {
-                dashboardView.classList.add('hidden');
+            } else if (tab === 'clips') {
                 clipsView.classList.add('active');
+            } else if (tab === 'review') {
+                if (reviewView) {
+                    reviewView.style.display = 'block';
+                    loadPendingClips();
+                }
             }
         }
+
+        // ===== REVIEW FUNCTIONS =====
+        let pendingClips = [];
+
+        async function loadPendingClips() {
+            const queue = document.getElementById('reviewQueue');
+            queue.innerHTML = '<div class="loading-message">Loading clips for review...</div>';
+
+            try {
+                const response = await fetch('/api/review/pending');
+                const data = await response.json();
+
+                if (data.success) {
+                    pendingClips = data.clips;
+                    renderPendingClips(data.clips);
+                    updatePendingCount(data.clips.length);
+                }
+
+                // Also load stats
+                loadReviewStats();
+            } catch (error) {
+                queue.innerHTML = '<div class="loading-message">Error loading clips</div>';
+                console.error('Error loading pending clips:', error);
+            }
+        }
+
+        async function loadReviewStats() {
+            try {
+                const response = await fetch('/api/review/stats');
+                const data = await response.json();
+
+                if (data.success && data.stats) {
+                    const stats = data.stats;
+                    document.getElementById('reviewStats').innerHTML = `
+                        <span class="stat-pending">Pending: <strong>${stats.pending || 0}</strong></span>
+                        <span class="stat-approved">Approved: <strong>${stats.approved || 0}</strong></span>
+                        <span class="stat-rejected">Rejected: <strong>${stats.rejected || 0}</strong></span>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading review stats:', error);
+            }
+        }
+
+        function renderPendingClips(clips) {
+            const queue = document.getElementById('reviewQueue');
+
+            if (clips.length === 0) {
+                queue.innerHTML = '<div class="loading-message">No clips pending review</div>';
+                return;
+            }
+
+            queue.innerHTML = clips.map(clip => `
+                <div class="review-card" data-clip-id="${clip.id}">
+                    <video
+                        src="${clip.url}"
+                        poster="${clip.thumbnail_url}"
+                        onclick="playClip('${clip.filename}', '${clip.created_at}', '${clip.trigger_type}')"
+                        muted
+                        onmouseover="this.play()"
+                        onmouseout="this.pause(); this.currentTime = 0;"
+                    ></video>
+                    <div class="review-card-info">
+                        <span class="review-card-trigger">${(clip.trigger_type || 'unknown').replace('_', ' ')}</span>
+                        <div class="review-card-meta">
+                            ${clip.streamer} &bull; ${clip.size_mb || '?'} MB
+                        </div>
+                        <div class="review-card-actions">
+                            <button class="btn-approve" onclick="approveClip(${clip.id})">Approve</button>
+                            <button class="btn-reject" onclick="rejectClip(${clip.id})">Reject</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updatePendingCount(count) {
+            const badge = document.getElementById('pendingCount');
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        async function approveClip(clipId) {
+            try {
+                const response = await fetch(`/api/review/${clipId}/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Clip approved', 'success');
+                    removeClipCard(clipId);
+                } else {
+                    showToast('Failed to approve clip', 'error');
+                }
+            } catch (error) {
+                showToast('Error approving clip', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        async function rejectClip(clipId) {
+            try {
+                const response = await fetch(`/api/review/${clipId}/reject`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Clip rejected', 'warning');
+                    removeClipCard(clipId);
+                } else {
+                    showToast('Failed to reject clip', 'error');
+                }
+            } catch (error) {
+                showToast('Error rejecting clip', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        function removeClipCard(clipId) {
+            const card = document.querySelector(`.review-card[data-clip-id="${clipId}"]`);
+            if (card) {
+                card.style.transform = 'scale(0.9)';
+                card.style.opacity = '0';
+                setTimeout(() => {
+                    card.remove();
+                    pendingClips = pendingClips.filter(c => c.id !== clipId);
+                    updatePendingCount(pendingClips.length);
+                    loadReviewStats();
+
+                    // Show empty message if no more clips
+                    const queue = document.getElementById('reviewQueue');
+                    if (queue.children.length === 0) {
+                        queue.innerHTML = '<div class="loading-message">No clips pending review</div>';
+                    }
+                }, 200);
+            }
+        }
+
+        async function bulkAction(action) {
+            if (pendingClips.length === 0) {
+                showToast('No clips to process', 'warning');
+                return;
+            }
+
+            const clipIds = pendingClips.map(c => c.id);
+
+            try {
+                const response = await fetch('/api/review/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, clip_ids: clipIds })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`${action === 'approve' ? 'Approved' : 'Rejected'} ${data.results.success} clips`, 'success');
+                    loadPendingClips();
+                } else {
+                    showToast('Bulk action failed', 'error');
+                }
+            } catch (error) {
+                showToast('Error performing bulk action', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        // Load pending count on page load
+        fetch('/api/review/pending')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    updatePendingCount(data.clips.length);
+                }
+            })
+            .catch(() => {});
 
         // ===== STREAM CONTROLS =====
         function changeStreamer() {

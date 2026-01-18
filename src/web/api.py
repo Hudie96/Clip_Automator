@@ -1,11 +1,20 @@
 """
 REST API endpoints for clip management.
-Handles clip deletion, renaming, and favorite management.
+Handles clip deletion, renaming, favorite management, and review workflow.
 """
 
 import json
+import os
 from pathlib import Path
 from flask import Blueprint, request, jsonify
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
+from src.db.schema import (
+    get_pending_clips, get_clip_by_id, approve_clip, reject_clip,
+    delete_clip_record, get_clip_stats, register_clip
+)
 
 # Get project root
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -281,4 +290,219 @@ def get_favorites():
             'success': False,
             'error': f'Failed to retrieve favorites: {str(e)}',
             'code': 'FETCH_ERROR'
+        }), 500
+
+
+# ==================
+# Clip Review API
+# ==================
+
+@api_bp.route('/review/pending', methods=['GET'])
+def get_pending_review():
+    """Get clips pending review."""
+    streamer = request.args.get('streamer')
+    limit = request.args.get('limit', 50, type=int)
+
+    try:
+        clips = get_pending_clips(streamer=streamer, limit=limit)
+
+        # Enrich with file info
+        for clip in clips:
+            clip_path = find_clip_path(Path(clip['clip_path']).name)
+            if clip_path and clip_path.exists():
+                clip['exists'] = True
+                clip['size_mb'] = round(clip_path.stat().st_size / (1024 * 1024), 2)
+                clip['filename'] = clip_path.name
+                clip['url'] = f"/clips/{clip_path.name}"
+                clip['thumbnail_url'] = f"/thumbnails/{clip_path.stem}.jpg"
+            else:
+                clip['exists'] = False
+
+        return jsonify({
+            'success': True,
+            'clips': clips,
+            'total': len(clips)
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'code': 'FETCH_ERROR'
+        }), 500
+
+
+@api_bp.route('/review/stats', methods=['GET'])
+def get_review_stats():
+    """Get review statistics."""
+    try:
+        stats = get_clip_stats()
+        return jsonify({
+            'success': True,
+            'stats': stats
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'code': 'FETCH_ERROR'
+        }), 500
+
+
+@api_bp.route('/review/<int:clip_id>/approve', methods=['POST'])
+def approve_clip_endpoint(clip_id):
+    """Approve a clip."""
+    data = request.get_json() or {}
+    notes = data.get('notes')
+
+    try:
+        clip = get_clip_by_id(clip_id)
+        if not clip:
+            return jsonify({
+                'success': False,
+                'error': 'Clip not found',
+                'code': 'NOT_FOUND'
+            }), 404
+
+        success = approve_clip(clip_id, notes)
+
+        return jsonify({
+            'success': success,
+            'message': 'Clip approved' if success else 'Failed to approve clip',
+            'clip_id': clip_id
+        }), 200 if success else 500
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'code': 'APPROVE_ERROR'
+        }), 500
+
+
+@api_bp.route('/review/<int:clip_id>/reject', methods=['POST'])
+def reject_clip_endpoint(clip_id):
+    """Reject a clip (marks for deletion)."""
+    data = request.get_json() or {}
+    notes = data.get('notes')
+
+    try:
+        clip = get_clip_by_id(clip_id)
+        if not clip:
+            return jsonify({
+                'success': False,
+                'error': 'Clip not found',
+                'code': 'NOT_FOUND'
+            }), 404
+
+        success = reject_clip(clip_id, notes)
+
+        return jsonify({
+            'success': success,
+            'message': 'Clip rejected' if success else 'Failed to reject clip',
+            'clip_id': clip_id
+        }), 200 if success else 500
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'code': 'REJECT_ERROR'
+        }), 500
+
+
+@api_bp.route('/review/<int:clip_id>', methods=['DELETE'])
+def delete_clip_review(clip_id):
+    """Delete a clip immediately (both file and database record)."""
+    try:
+        clip = get_clip_by_id(clip_id)
+        if not clip:
+            return jsonify({
+                'success': False,
+                'error': 'Clip not found',
+                'code': 'NOT_FOUND'
+            }), 404
+
+        # Delete the actual file
+        clip_path = find_clip_path(Path(clip['clip_path']).name)
+        if clip_path and clip_path.exists():
+            clip_path.unlink()
+
+            # Delete thumbnail if exists
+            thumb_path = find_thumbnail_path(clip_path.name)
+            if thumb_path:
+                thumb_path.unlink()
+
+        # Delete database record
+        delete_clip_record(clip_id)
+
+        return jsonify({
+            'success': True,
+            'message': 'Clip deleted',
+            'clip_id': clip_id
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'code': 'DELETE_ERROR'
+        }), 500
+
+
+@api_bp.route('/review/bulk', methods=['POST'])
+def bulk_review():
+    """Bulk approve or reject clips."""
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            'success': False,
+            'error': 'Missing request body',
+            'code': 'INVALID_REQUEST'
+        }), 400
+
+    action = data.get('action')  # 'approve' or 'reject'
+    clip_ids = data.get('clip_ids', [])
+
+    if action not in ['approve', 'reject']:
+        return jsonify({
+            'success': False,
+            'error': 'Invalid action. Must be "approve" or "reject"',
+            'code': 'INVALID_REQUEST'
+        }), 400
+
+    if not clip_ids:
+        return jsonify({
+            'success': False,
+            'error': 'No clip IDs provided',
+            'code': 'INVALID_REQUEST'
+        }), 400
+
+    try:
+        results = {'success': 0, 'failed': 0}
+
+        for clip_id in clip_ids:
+            if action == 'approve':
+                if approve_clip(clip_id):
+                    results['success'] += 1
+                else:
+                    results['failed'] += 1
+            else:  # reject
+                if reject_clip(clip_id):
+                    results['success'] += 1
+                else:
+                    results['failed'] += 1
+
+        return jsonify({
+            'success': True,
+            'message': f'{action.capitalize()}d {results["success"]} clips',
+            'results': results
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'code': 'BULK_ERROR'
         }), 500

@@ -69,6 +69,20 @@ def init_db():
         cursor.execute("ALTER TABLE moments ADD COLUMN trigger_data TEXT")
         print("Added trigger_data column to moments table")
 
+    # Clips table - tracks clip review status
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS clips (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            clip_path TEXT UNIQUE NOT NULL,
+            streamer TEXT NOT NULL,
+            trigger_type TEXT,
+            status TEXT DEFAULT 'pending',
+            reviewed_at DATETIME,
+            notes TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
     # Create indexes for faster queries
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_moments_processed
@@ -77,6 +91,14 @@ def init_db():
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_moments_session
         ON moments(session_id)
+    """)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_clips_status
+        ON clips(status)
+    """)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_clips_streamer
+        ON clips(streamer)
     """)
 
     conn.commit()
@@ -218,6 +240,150 @@ def get_session_stats(session_id: int) -> dict:
     row = cursor.fetchone()
     conn.close()
 
+    return dict(row) if row else {}
+
+
+# ==================
+# Clip Review Functions
+# ==================
+
+def register_clip(clip_path: str, streamer: str, trigger_type: str = None) -> int:
+    """Register a new clip as pending review. Returns clip ID."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            INSERT INTO clips (clip_path, streamer, trigger_type, status)
+            VALUES (?, ?, ?, 'pending')
+        """, (clip_path, streamer, trigger_type))
+        clip_id = cursor.lastrowid
+        conn.commit()
+    except sqlite3.IntegrityError:
+        # Clip already exists, get its ID
+        cursor.execute("SELECT id FROM clips WHERE clip_path = ?", (clip_path,))
+        row = cursor.fetchone()
+        clip_id = row['id'] if row else None
+    finally:
+        conn.close()
+
+    return clip_id
+
+
+def get_pending_clips(streamer: str = None, limit: int = 50) -> list:
+    """Get clips pending review, optionally filtered by streamer."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if streamer:
+        cursor.execute("""
+            SELECT * FROM clips
+            WHERE status = 'pending' AND streamer = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+        """, (streamer, limit))
+    else:
+        cursor.execute("""
+            SELECT * FROM clips
+            WHERE status = 'pending'
+            ORDER BY created_at DESC
+            LIMIT ?
+        """, (limit,))
+
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def get_clip_by_id(clip_id: int) -> dict:
+    """Get a clip by its ID."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM clips WHERE id = ?", (clip_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def approve_clip(clip_id: int, notes: str = None) -> bool:
+    """Mark a clip as approved."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE clips
+        SET status = 'approved', reviewed_at = CURRENT_TIMESTAMP, notes = ?
+        WHERE id = ?
+    """, (notes, clip_id))
+
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return success
+
+
+def reject_clip(clip_id: int, notes: str = None) -> bool:
+    """Mark a clip as rejected (queued for deletion)."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE clips
+        SET status = 'rejected', reviewed_at = CURRENT_TIMESTAMP, notes = ?
+        WHERE id = ?
+    """, (notes, clip_id))
+
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return success
+
+
+def delete_clip_record(clip_id: int) -> bool:
+    """Delete a clip record from the database."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM clips WHERE id = ?", (clip_id,))
+
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return success
+
+
+def get_rejected_clips(older_than_hours: int = 24) -> list:
+    """Get rejected clips older than specified hours for cleanup."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT * FROM clips
+        WHERE status = 'rejected'
+        AND reviewed_at < datetime('now', ? || ' hours')
+    """, (-older_than_hours,))
+
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def get_clip_stats() -> dict:
+    """Get overall clip statistics."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+            SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
+        FROM clips
+    """)
+
+    row = cursor.fetchone()
+    conn.close()
     return dict(row) if row else {}
 
 

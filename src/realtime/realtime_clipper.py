@@ -55,7 +55,7 @@ from config.settings import (
     TRIGGER_COOLDOWNS
 )
 from src.web.live_stats import shared_stats
-from src.db.schema import init_db, start_session, end_session, log_moment
+from src.db.schema import init_db, start_session, end_session, log_moment, register_clip
 from src.realtime.triggers import ViewerTrigger, ChatTrigger, TriggerEvent
 from src.utils.cleanup import cleanup_old_segments
 from src.utils.thumbnails import generate_thumbnail
@@ -384,6 +384,9 @@ class RealtimeClipper:
                     trigger_type=event.trigger_type,
                     trigger_data=str(event.data)
                 )
+
+            # Register clip for review (pending status by default)
+            register_clip(clip_path, self.streamer, event.trigger_type)
 
     def run(self):
         """Main run loop."""
