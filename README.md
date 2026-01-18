@@ -259,49 +259,75 @@ Prevents clip spam with multiple layers:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/review/pending` | GET | Get clips pending review |
+| `/api/review/pending` | GET | Get clips pending review (`?streamer=name&limit=50`) |
 | `/api/review/stats` | GET | Get review statistics |
-| `/api/review/<id>/approve` | POST | Approve a clip |
-| `/api/review/<id>/reject` | POST | Reject a clip |
-| `/api/review/<id>` | DELETE | Delete immediately |
-| `/api/review/bulk` | POST | Bulk approve/reject |
+| `/api/review/<id>/approve` | POST | Approve a clip (optional `notes` in body) |
+| `/api/review/<id>/reject` | POST | Reject a clip (optional `notes` in body) |
+| `/api/review/<id>` | DELETE | Delete clip immediately (file + database) |
+| `/api/review/bulk` | POST | Bulk approve/reject (`action` + `clip_ids` in body) |
 
 ### Clip Editor
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/clips/trim` | POST | Trim a clip with in/out points |
-| `/api/clips/trim/status/<job_id>` | GET | Check trim job status |
+| `/api/clips/trim` | POST | Trim a clip with in/out points (async job) |
+| `/api/clips/trim/status/<job_id>` | GET | Check trim job status and get output file |
+
+**Trim Request Body:**
+```json
+{
+  "filename": "clip.mp4",
+  "start_time": 5.0,
+  "end_time": 30.0,
+  "output_name": "clip_trimmed.mp4",
+  "reencode": false
+}
+```
 
 ### Streamer Management
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/streamers/search` | GET | Search Kick for streamers (`?q=query`) |
+| `/api/streamers/search` | GET | Search Kick for streamers (`?q=query&limit=10`) |
 | `/api/streamers/add` | POST | Add streamer to monitoring list |
 | `/api/streamers/<name>` | DELETE | Remove streamer from monitoring |
-| `/api/streamers/list` | GET | List all monitored streamers |
+| `/api/streamers/list` | GET | List all monitored streamers with live status |
+| `/api/streamers/<name>/status` | GET | Get specific streamer's live status |
 
 ### VOD Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/vods/list/<streamer>` | GET | List VODs for a streamer |
-| `/api/vods/clip` | POST | Create clip from VOD |
+| `/api/vods/list/<streamer>` | GET | List VODs for a streamer (`?limit=20`) |
+| `/api/vods/details/<vod_id>` | GET | Get detailed info about a specific VOD |
+| `/api/vods/clip` | POST | Create clip from VOD (manual mode) |
 | `/api/vods/clip/status/<job_id>` | GET | Check VOD clip job status |
-| `/api/vods/analyze/<vod_id>` | POST | Analyze VOD chat for highlights |
+| `/api/vods/analyze/<vod_id>` | POST | Analyze VOD chat for highlights (uses 1 credit) |
+| `/api/vods/clip/batch` | POST | Create multiple clips from highlights |
+| `/api/vods/clip/batch/<batch_id>` | GET | Check batch clip job status |
 
 ---
 
 ## Dashboard Features
 
+### Tab-Based Navigation
+
+The dashboard uses a tab-based interface with 5 main sections:
+
+| Tab | Description |
+|-----|-------------|
+| **Dashboard** | Live stream preview, real-time stats (viewers, chat velocity), recent activity |
+| **All Clips** | Browse all clips with thumbnails, hover-to-preview, filtering by streamer/trigger |
+| **VODs** | Browse past broadcasts, create clips manually or use auto-detect |
+| **Streamers** | Search Kick for live streamers, add/remove from monitoring list |
+| **Review** | Approve/reject pending clips with fullscreen slideshow mode |
+
+### Core Features
+
 - **Live Stream Preview** - Embedded Kick player (collapsible)
 - **Real-time Stats** - Viewers, chat velocity, triggers via WebSocket
 - **Clip Grid** - Thumbnails with hover-to-preview video
-- **Review Tab** - Approve/reject pending clips
-- **Fullscreen Slide Deck Review** - Review clips one-by-one with keyboard shortcuts
-- **Streamer Search Tab** - Search Kick for live streamers, add to monitoring
-- **VOD Clipper Tab** - Clip from past broadcasts (manual + auto-detect)
+- **Fullscreen Slideshow Review** - Review clips one-by-one with keyboard shortcuts
 - **Clip Editor** - Trim clips with in/out points, preview, and export
 - **Responsive Layout** - Dashboard fits on screen, no scrolling required
 - **Filtering** - By streamer, trigger type, favorites

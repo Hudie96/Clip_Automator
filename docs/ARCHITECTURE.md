@@ -79,36 +79,43 @@ This document outlines the future architecture for scaling Clip Automater to a m
 #### Clip Management
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/clips/<filename>` | DELETE | Delete a clip |
-| `/api/clips/<filename>` | PATCH | Rename a clip |
-| `/api/clips/<filename>/favorite` | POST | Toggle favorite |
-| `/api/clips/<filename>/metadata` | GET | Get clip metadata |
-| `/api/clips/trim` | POST | Trim clip with in/out points |
-| `/api/clips/trim/status/<job_id>` | GET | Check trim job status |
+| `/api/clips/<filename>` | DELETE | Delete a clip and its thumbnail |
+| `/api/clips/<filename>` | PATCH | Rename a clip (`new_name` in body) |
+| `/api/clips/<filename>/favorite` | POST | Toggle favorite status |
+| `/api/clips/<filename>/metadata` | GET | Get clip metadata (duration, dimensions) |
+| `/api/favorites` | GET | List all favorited clips |
+| `/api/clips/trim` | POST | Trim clip with in/out points (async job) |
+| `/api/clips/trim/status/<job_id>` | GET | Check trim job status and get output |
 
 #### Streamer Management
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/streamers/search` | GET | Search Kick for streamers |
+| `/api/streamers/search` | GET | Search Kick for streamers (`?q=query&limit=10`) |
 | `/api/streamers/add` | POST | Add streamer to monitoring |
 | `/api/streamers/<name>` | DELETE | Remove from monitoring |
-| `/api/streamers/list` | GET | List monitored streamers |
+| `/api/streamers/list` | GET | List monitored streamers with live status |
+| `/api/streamers/<name>/status` | GET | Get specific streamer's live status |
 
 #### VOD Endpoints
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/vods/list/<streamer>` | GET | List VODs for a streamer |
-| `/api/vods/clip` | POST | Create clip from VOD |
+| `/api/vods/list/<streamer>` | GET | List VODs for a streamer (`?limit=20`) |
+| `/api/vods/details/<vod_id>` | GET | Get detailed info about a specific VOD |
+| `/api/vods/clip` | POST | Create clip from VOD (manual mode, free) |
 | `/api/vods/clip/status/<job_id>` | GET | Check VOD clip job status |
-| `/api/vods/analyze/<vod_id>` | POST | Analyze VOD for highlights |
+| `/api/vods/analyze/<vod_id>` | POST | Analyze VOD for highlights (premium, 1 credit) |
+| `/api/vods/clip/batch` | POST | Create multiple clips from highlights |
+| `/api/vods/clip/batch/<batch_id>` | GET | Check batch clip job status |
 
 #### Review Endpoints
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/review/pending` | GET | Get clips pending review |
-| `/api/review/<id>/approve` | POST | Approve a clip |
-| `/api/review/<id>/reject` | POST | Reject a clip |
-| `/api/review/bulk` | POST | Bulk approve/reject |
+| `/api/review/pending` | GET | Get clips pending review (`?streamer=name&limit=50`) |
+| `/api/review/stats` | GET | Get review statistics (pending/approved/rejected counts) |
+| `/api/review/<id>/approve` | POST | Approve a clip (optional `notes` in body) |
+| `/api/review/<id>/reject` | POST | Reject a clip (optional `notes` in body) |
+| `/api/review/<id>` | DELETE | Delete clip immediately (file + database) |
+| `/api/review/bulk` | POST | Bulk approve/reject (`action` + `clip_ids` in body) |
 
 ### Future API Layer (SaaS)
 
@@ -267,13 +274,17 @@ K8s Cluster
 
 ## Dashboard Features
 
-### Tabs
+### Tab-Based Navigation
+
+The dashboard provides a 5-tab interface for managing all aspects of clip automation:
+
 | Tab | Description |
 |-----|-------------|
-| **Clips** | View all clips with thumbnails, hover preview |
-| **Review** | Approve/reject pending clips |
-| **Streamers** | Search and manage monitored streamers |
-| **VODs** | Browse past broadcasts, create clips |
+| **Dashboard** | Live stream preview, real-time stats (viewers, chat velocity, triggers), recent activity feed |
+| **All Clips** | Browse all clips with thumbnails, hover-to-preview video, filter by streamer/trigger type |
+| **VODs** | Browse past broadcasts, create clips manually or use auto-detect mode with chat analysis |
+| **Streamers** | Search Kick API for live streamers, add/remove from monitoring list, view live status |
+| **Review** | Approve/reject pending clips, fullscreen slideshow mode with keyboard shortcuts |
 
 ### Fullscreen Slide Deck Review
 
